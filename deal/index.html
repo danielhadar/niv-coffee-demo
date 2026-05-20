@@ -33,9 +33,16 @@
     <!-- Toast notification -->
     <div id="toast" class="toast hidden" aria-live="polite"></div>
 
+    <!-- Loading state — shown until backendStatus resolves so the customer
+         can't type into the activate screen before we know if the session is
+         already locked/redeemed/expired. -->
+    <section id="screen-loading" class="deal-screen" aria-label="טוען">
+      <div class="loading-spinner" aria-hidden="true"></div>
+    </section>
+
     <!-- Screen 1: cashier-gate -->
-    <section id="screen-activate" class="deal-screen" aria-labelledby="screen-activate-title">
-      <h1 id="screen-activate-title" class="deal-title">הראו את המסך למוכר/ת בחנות</h1>
+    <section id="screen-activate" class="deal-screen hidden" aria-labelledby="screen-activate-title">
+      <h1 id="screen-activate-title" class="deal-title">כאן מזינים את הקוד לקבלת ההטבות</h1>
       <div class="pin-section">
         <div class="pin-cells" id="store-pin-cells" dir="ltr" role="group" aria-label="קוד הפעלה">
           <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 1">
@@ -68,7 +75,7 @@
 
     <!-- Screen 4: error (locked / expired / unexpected) -->
     <section id="screen-error" class="deal-screen hidden" aria-labelledby="screen-error-title">
-      <h1 id="screen-error-title" class="deal-title">משהו השתבש</h1>
+      <h1 id="screen-error-title" class="deal-title">משהו השתבש 🙈</h1>
       <p id="screen-error-message" class="deal-subtitle"></p>
     </section>
 

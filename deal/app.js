@@ -29,6 +29,7 @@ var ACTIVATE_CELEBRATION_MS = 1800;
 // DOM REFERENCES
 // ============================================================
 
+var screenLoading         = document.getElementById("screen-loading");
 var screenActivate        = document.getElementById("screen-activate");
 var screenDeals           = document.getElementById("screen-deals");
 var screenActivateSuccess = document.getElementById("screen-activate-success");
@@ -116,6 +117,8 @@ function backendRedeem(sessionId, pin) {
 // ============================================================
 
 function show(screen) {
+  // First call after init also dismisses the boot-time loading spinner.
+  screenLoading.classList.add("hidden");
   screenActivate.classList.add("hidden");
   screenDeals.classList.add("hidden");
   screenError.classList.add("hidden");

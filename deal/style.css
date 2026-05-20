@@ -106,6 +106,19 @@
   to { transform: rotate(360deg); }
 }
 
+/* Page-level spinner shown until the server's session status comes back.
+   Prevents typing into the activate screen before we know whether the
+   session is already locked / redeemed / expired. */
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 56px auto;
+  border: 3px solid rgba(63, 92, 56, 0.2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: pin-spin 0.7s linear infinite;
+}
+
 .hidden { display: none !important; }
 
 /* Deals list — one card per deal, all visible at once. */
