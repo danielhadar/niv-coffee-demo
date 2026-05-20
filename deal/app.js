@@ -1,14 +1,11 @@
 // ============================================================
 // CONFIGURATION — Change these values to customize the app.
-// IMPORTANT: STORE_PIN, NIV_PIN, DEAL_EXPIRY, DAY_CUTOFF_HOUR
-// must be kept in sync with backend/Code.gs.
+//
+// PINs and the expiry window are NOT here on purpose: they're enforced
+// entirely server-side and putting them in the bundle would leak them
+// to anyone who opens DevTools. The values that govern those (STORE_PIN,
+// NIV_PIN, DEAL_EXPIRY, DAY_CUTOFF_HOUR) live at the top of backend/Code.gs.
 // ============================================================
-
-var STORE_PIN = "1234";
-var NIV_PIN   = "5678";
-
-var DEAL_EXPIRY     = "today";   // "today" | "+24h" | "+7d"
-var DAY_CUTOFF_HOUR = 23;        // last hour of validity when DEAL_EXPIRY === "today"
 
 var DEALS = [
   { title: "קפה + כריך", price: "35 ₪", note: "" },
