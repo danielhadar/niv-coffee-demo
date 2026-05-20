@@ -29,7 +29,7 @@ var CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 // codes still work on this device, but restoring a code only finds what was
 // stored locally under "niv_remote_<code>". Deploy backend/Code.gs to a new
 // Google Sheet, then paste the /exec URL here to enable real cross-device sync.
-var BACKEND_URL = "";
+var BACKEND_URL = "https://script.google.com/macros/s/AKfycbyM_7knxRp1RHZjJLliqVvNd21HgAfDXSdgIYyibqYJBaZ0iWAfvta8qY556DZizdeI8w/exec";
 
 // ============================================================
 // SHAPE DEFINITIONS — 16 geometric shapes inspired by the brand
