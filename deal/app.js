@@ -154,7 +154,7 @@ function renderDeals() {
       html += '<span class="deal-card-price">' + escapeHTML(d.priceNew) + '</span>';
     }
     if (d.priceOld) {
-      html += '<span class="deal-card-price-old">' + escapeHTML(d.priceOld) + '</span>';
+      html += '<span class="deal-card-price-old">במקום <s>' + escapeHTML(d.priceOld) + '</s></span>';
     }
     html +=   '</span>';
     html += '</li>';
