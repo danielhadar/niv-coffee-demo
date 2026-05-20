@@ -544,11 +544,18 @@ function setupReport() {
     ['SCANS', ''],                                                                   // 27
     ['QR', '=COUNTIFS(events!B:B,"scan",events!C:C,"qr",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 28
     ['', ''],                                                                        // 29
-    ['DERIVED', ''],                                                                 // 30
-    ['Coffee completion %',   '=IFERROR(B17*10/B12,0)'],                             // 31
-    ['Pizza completion %',    '=IFERROR(B18*10/B13,0)'],                             // 32
-    ['Sandwich completion %', '=IFERROR(B19*10/B14,0)'],                             // 33
-    ['Total codes ever',      '=COUNTA(codes!A:A)-1']                                // 34
+    ['DEAL', ''],                                                                    // 30
+    ['Activations', '=COUNTIFS(events!B:B,"deal_activate",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 31
+    ['Redemptions', '=COUNTIFS(events!B:B,"deal_redeem",  events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 32
+    ['Locks',       '=COUNTIFS(events!B:B,"deal_lock",    events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 33
+    ['', ''],                                                                        // 34
+    ['DERIVED', ''],                                                                 // 35
+    ['Coffee completion %',   '=IFERROR(B17*10/B12,0)'],                             // 36
+    ['Pizza completion %',    '=IFERROR(B18*10/B13,0)'],                             // 37
+    ['Sandwich completion %', '=IFERROR(B19*10/B14,0)'],                             // 38
+    ['Redemption rate %',     '=IFERROR(B32/B31,0)'],                                // 39
+    ['Total codes ever',      '=COUNTA(codes!A:A)-1'],                               // 40
+    ['Total deal sessions ever', '=COUNTA(deal_sessions!A:A)-1']                     // 41
   ];
 
   sheet.getRange(1, 1, rows.length, 2).setValues(rows);
@@ -556,10 +563,10 @@ function setupReport() {
   // Number formats
   sheet.getRange('B2:B3').setNumberFormat('yyyy-mm-dd');
   sheet.getRange('B8:B9').setNumberFormat('yyyy-mm-dd hh:mm');
-  sheet.getRange('B31:B33').setNumberFormat('0%');
+  sheet.getRange('B36:B39').setNumberFormat('0%');
 
   // Visual cues: bold section headers, highlight input cells, subdue helpers
-  var headerRows = [1, 7, 11, 16, 21, 27, 30];
+  var headerRows = [1, 7, 11, 16, 21, 27, 30, 35];
   for (var i = 0; i < headerRows.length; i++) {
     sheet.getRange(headerRows[i], 1, 1, 2).setFontWeight('bold');
   }
