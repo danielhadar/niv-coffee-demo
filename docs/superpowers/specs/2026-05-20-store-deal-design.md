@@ -78,7 +78,7 @@ Three `<section>`s stacked, JS toggles `.hidden`:
 
 - `#screen-activate` — "הראו למוכר/ת בחנות" + PIN field
 - `#screen-deals` — deals list + "תנו לניב להזין קוד" + PIN field
-- `#screen-done` — "נוצל ✓" + the deal text + redemption timestamp
+- `#screen-done` — confetti burst + "נוצל ✓" + the deal text + redemption timestamp. Confetti fires on transition and plays out before the screen settles.
 - `#screen-error` — fallback for `locked` / `expired` / unrecoverable states
 
 All sections share the niv-cafe header (logo + Alef font), and the page loads the Negishut accessibility widget with the same `NegishutConfig` as `index.html`. PIN inputs are `inputmode="numeric"`, `maxlength="4"`, render dots like an iOS passcode, auto-focus on screen entry, and have large tap targets.
@@ -98,7 +98,7 @@ var DEALS = [
 ];
 ```
 
-Rest of the file (in the vanilla-JS style of `src/app.js`): session_id generator (16 base32 chars), URL-hash sync, screen-state machine, `fetch` wrappers for the three backend actions, error toasts. No confetti or other celebration animation — that's the punch-card app's signature and we don't want to dilute it.
+Rest of the file (in the vanilla-JS style of `src/app.js`): session_id generator (16 base32 chars), URL-hash sync, screen-state machine, `fetch` wrappers for the three backend actions, error toasts, and a confetti burst when `deal_redeem` succeeds. The confetti fires once on transition to `#screen-done` and plays before the screen settles into its final "נוצל ✓" state. Reuses the existing `.confetti-*` classes and animation from `src/style.css` / `src/app.js` (the punch-card celebration overlay) — same shapes, same palette, same timing.
 
 ### `deal-qr.html`
 
