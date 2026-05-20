@@ -150,11 +150,11 @@ function renderDeals() {
     html += '<li class="deal-card">';
     html +=   '<span class="deal-card-title">' + escapeHTML(d.title) + '</span>';
     html +=   '<span class="deal-card-prices">';
-    if (d.priceOld) {
-      html += '<span class="deal-card-price-old">' + escapeHTML(d.priceOld) + '</span>';
-    }
     if (d.priceNew) {
       html += '<span class="deal-card-price">' + escapeHTML(d.priceNew) + '</span>';
+    }
+    if (d.priceOld) {
+      html += '<span class="deal-card-price-old">' + escapeHTML(d.priceOld) + '</span>';
     }
     html +=   '</span>';
     html += '</li>';
