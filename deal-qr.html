@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניב קפה מעדניה — קוד הטבה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --green: #3F5C38;
+      --cream: #F4EBD2;
+      --coral: #EA9580;
+      --font: 'Alef', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      font-weight: 700;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--cream);
+      padding: 24px 16px;
+    }
+
+    .qr-card {
+      background: #FFFFFF;
+      border-radius: 24px;
+      box-shadow: 0 6px 32px rgba(63, 92, 56, 0.16);
+      padding: 36px 32px 40px;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+      position: relative;
+    }
+
+    .qr-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 4px;
+      border-radius: 0 0 4px 4px;
+      background: var(--coral);
+    }
+
+    .brand-logo {
+      display: block;
+      width: 80%;
+      max-width: 240px;
+      height: auto;
+      margin: 8px auto 14px;
+    }
+
+    .divider {
+      width: 64px;
+      height: 1px;
+      background: var(--coral);
+      opacity: 0.7;
+      margin: 22px auto 24px;
+    }
+
+    .qr-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+
+    .qr-subtitle {
+      font-size: 0.92rem;
+      font-weight: 400;
+      color: var(--green);
+      opacity: 0.75;
+      margin-bottom: 24px;
+    }
+
+    #qr-container {
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+      background: #FFFFFF;
+      border-radius: 14px;
+      border: 1px solid rgba(63, 92, 56, 0.15);
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    #qr-container canvas,
+    #qr-container img {
+      display: block;
+      border-radius: 8px;
+    }
+
+    @media print {
+      body {
+        background: #FFFFFF;
+        min-height: auto;
+        padding: 0;
+      }
+      .qr-card {
+        box-shadow: none;
+        border: 1.5px solid var(--green);
+        max-width: none;
+        width: 10cm;
+        padding: 1.4cm 1.2cm 1.5cm;
+        border-radius: 12px;
+      }
+      .qr-card::before {
+        background: var(--coral) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .divider {
+        background: var(--coral) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="qr-card">
+    <img src="assets/logo.png?v=15" alt="ניב קפה מעדניה" class="brand-logo">
+
+    <div class="divider"></div>
+
+    <p class="qr-title">קוד הטבה</p>
+    <p class="qr-subtitle">סרקו כאן לקבלת הטבה בניב</p>
+
+    <div id="qr-container"></div>
+  </div>
+
+  <script>
+    new QRCode(document.getElementById("qr-container"), {
+      text: "https://TODO-niv-domain.example.com/deal/",
+      width: 220,
+      height: 220,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  </script>
+
+</body>
+</html>
