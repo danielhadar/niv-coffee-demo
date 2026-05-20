@@ -1,0 +1,955 @@
+/* ============================================================
+   1. CUSTOM PROPERTIES
+   ============================================================ */
+
+:root {
+  /* Brand colors. If --brand (#3F5C38) or --bg (#F4EBD2) change, also update:
+     - <meta name="theme-color"> in index.html
+     - "theme_color" / "background_color" in assets/manifest.json */
+  --brand: rgb(63, 92, 56);
+  --bg: #F4EBD2;
+
+  --slot-empty: #B5C2A8;
+  --error-red: #C0392B;
+  --gray: #D0D0D0;
+  --gray-dark: #999;
+  --white: #FFFFFF;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-stack: 'Alef', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ============================================================
+   2. RESET / BASE
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-stack);
+  font-size: 16px;
+  font-weight: 700;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--brand);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ============================================================
+   3. LAYOUT
+   ============================================================ */
+
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--white);
+}
+
+/* ============================================================
+   4. HEADER / LOGO
+   ============================================================ */
+
+.header {
+  width: calc(100% + 40px);
+  margin: 0 -20px;
+  padding: 12px 20px;
+  background-color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo {
+  max-width: 80%;
+  height: auto;
+  max-height: 96px;
+  display: block;
+  object-fit: contain;
+}
+
+/* ============================================================
+   4b. TABS
+   ============================================================ */
+
+.tabs {
+  width: 100%;
+  display: flex;
+  border-bottom: 1px solid rgba(63, 92, 56, 0.18);
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+
+.tab {
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-stack);
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(63, 92, 56, 0.5);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover { color: rgba(63, 92, 56, 0.8); }
+
+.tab--active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+/* ============================================================
+   5. PUNCH CARD
+   ============================================================ */
+
+.card {
+  width: 100%;
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 2px solid var(--brand);
+  padding: 20px 12px 16px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.card-grid {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.card-svg {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+
+.card-progress {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin-top: 12px;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================
+   6. SHAPE STATES (filled / empty)
+   ============================================================ */
+
+.slot-fill {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+}
+
+/* Static punched state — used on page load for existing punches */
+.slot.punched .slot-fill {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Animated punch — used when adding new punches */
+.slot.punched.animating .slot-fill {
+  animation: punch-fill 0.4s ease-out forwards;
+}
+
+/* ============================================================
+   7. QUANTITY STEPPER
+   ============================================================ */
+
+.quantity-section {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.quantity-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 10px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--brand);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 48px;
+  height: 48px;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: var(--white);
+  color: var(--brand);
+  font-size: 1.4rem;
+  font-family: var(--font-stack);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.stepper-btn:active:not(:disabled) {
+  background-color: rgba(63, 92, 56, 0.08);
+}
+
+.stepper-btn:disabled {
+  color: var(--gray);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.stepper-minus {
+  border-right: 1px solid rgba(63, 92, 56, 0.2);
+}
+
+.stepper-plus {
+  border-left: 1px solid rgba(63, 92, 56, 0.2);
+}
+
+.stepper-value {
+  min-width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--brand);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============================================================
+   8. CODE INPUT AREA
+   ============================================================ */
+
+.code-section {
+  width: 100%;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 2px solid rgba(63, 92, 56, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 1.1rem;
+  font-family: var(--font-stack);
+  color: var(--brand);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.15s ease;
+  text-align: center;
+}
+
+.code-input::placeholder {
+  color: var(--gray-dark);
+  opacity: 0.7;
+  text-align: center;
+}
+
+.code-input:focus {
+  border-color: var(--brand);
+}
+
+.punch-btn {
+  width: 100%;
+  height: 52px;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--brand);
+  color: var(--white);
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: var(--font-stack);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.punch-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.punch-btn:active:not(:disabled) {
+  opacity: 0.85;
+}
+
+.status-message {
+  margin-top: 0;
+  font-size: 0.9rem;
+  min-height: 1.4em;
+  text-align: center;
+}
+
+.status-message.error {
+  color: var(--error-red);
+}
+
+/* ============================================================
+   8b. SOCIAL HUB
+   ============================================================ */
+
+.social-separator {
+  width: 100%;
+  height: 1px;
+  background: rgba(63, 92, 56, 0.18);
+  border: none;
+  margin: 4px 0 18px;
+}
+
+.social-hub {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  padding-bottom: 8px;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.social-link svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.social-link:hover,
+.social-link:focus-visible { opacity: 1; }
+
+.social-link:active { transform: scale(0.92); }
+
+.social-link--facebook  { color: #1877F2; }
+.social-link--instagram { color: #E1306C; }
+.social-link--maps      { color: #EA4335; }
+.social-link--phone     { color: var(--brand); }
+.social-link--account   { color: var(--brand); }
+
+/* ============================================================
+   8c. CODE MODAL (my-card / restore / override-confirm)
+   ============================================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(63, 92, 56, 0.55);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.modal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--white);
+  border-radius: 18px;
+  padding: 28px 22px 18px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(10px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2), opacity 0.18s ease;
+}
+
+.modal-overlay.visible .modal-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.modal-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--brand);
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+}
+
+.modal-subtitle {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--brand);
+  text-align: center;
+  opacity: 0.68;
+  line-height: 1.55;
+  margin-bottom: 22px;
+  padding: 0 4px;
+}
+
+.code-display {
+  position: relative;
+  background: var(--bg);
+  border: 1.5px solid rgba(63, 92, 56, 0.18);
+  border-radius: 14px;
+  padding: 18px 56px;
+  margin-bottom: 20px;
+  direction: ltr;
+}
+
+.code-display .icon-btn {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.code-display-value {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: var(--brand);
+  padding-left: 0.28em; /* offset letter-spacing so the visual center aligns with the box */
+  font-feature-settings: "tnum";
+  line-height: 1.1;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  color: var(--brand);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+  flex: 0 0 auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:hover  { background-color: rgba(63, 92, 56, 0.06); }
+.icon-btn:active { background-color: rgba(63, 92, 56, 0.12); transform: scale(0.94); }
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.code-input-field {
+  width: 100%;
+  height: 60px;
+  background: var(--bg);
+  border: 1.5px solid rgba(63, 92, 56, 0.18);
+  border-radius: 14px;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--brand);
+  margin-bottom: 14px;
+  font-family: var(--font-stack);
+  direction: ltr;
+  outline: none;
+  text-transform: uppercase;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.code-input-field:focus {
+  border-color: var(--brand);
+  background: var(--white);
+}
+
+.code-input-field::placeholder {
+  font-weight: 700;
+  opacity: 0.28;
+  letter-spacing: 0.25em;
+}
+
+.modal-status {
+  text-align: center;
+  font-size: 0.9rem;
+  min-height: 1.3em;
+  color: var(--error-red);
+  margin-top: -6px;
+  margin-bottom: 10px;
+}
+
+.modal-primary-btn {
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: 14px;
+  background: var(--brand);
+  color: var(--white);
+  font-family: var(--font-stack);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+  margin-bottom: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-primary-btn:active:not(:disabled) {
+  opacity: 0.9;
+  transform: scale(0.99);
+}
+
+.modal-primary-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.modal-primary-btn[aria-busy="true"] {
+  opacity: 1; /* full opacity while loading so the spinner reads as active, not greyed out */
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: spinner-rotate 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-spinner { animation: none; }
+}
+
+.modal-link-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: transparent;
+  border: none;
+  font-family: var(--font-stack);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand);
+  opacity: 0.68;
+  cursor: pointer;
+  padding: 10px 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-link-btn:hover  { opacity: 0.85; }
+.modal-link-btn:active { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-card {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   9. TOAST
+   ============================================================ */
+
+.toast {
+  position: fixed;
+  top: 33%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  background-color: var(--brand);
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 600;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+/* ============================================================
+   11. CELEBRATION OVERLAY
+   ============================================================ */
+
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(63, 92, 56, 0.95);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.celebration-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Pause confetti when overlay is not visible to save CPU */
+.celebration-overlay:not(.visible) .confetti {
+  animation-play-state: paused;
+}
+
+.celebration-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 20px;
+  color: var(--white);
+}
+
+.celebration-line1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.celebration-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 56px;
+  border: 2.5px solid var(--white);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--white);
+  font-family: var(--font-stack);
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background-color 0.15s ease;
+}
+
+.celebration-close-btn:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================
+   12. CONFETTI
+   ============================================================ */
+
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.confetti {
+  position: absolute;
+  top: -20px;
+  width: 12px;
+  height: 12px;
+  will-change: transform;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 3s;
+  animation-delay: 0s;
+}
+
+/* Shape definitions via clip-path */
+.confetti-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.confetti-circle {
+  border-radius: 50%;
+  clip-path: none;
+}
+
+.confetti-hexagon {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.confetti-triangle {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.confetti-square {
+  clip-path: none;
+  border-radius: 2px;
+}
+
+/* Colors: odd = cream, even = butter yellow (drawn from logo palette) */
+.confetti:nth-child(odd) {
+  background: rgba(244, 235, 210, 0.9);
+}
+
+.confetti:nth-child(even) {
+  background: rgba(242, 210, 88, 0.85);
+}
+
+/* Horizontal positions — spread across viewport */
+.confetti:nth-child(1)  { left: 3%; }
+.confetti:nth-child(2)  { left: 10%; }
+.confetti:nth-child(3)  { left: 16%; }
+.confetti:nth-child(4)  { left: 22%; }
+.confetti:nth-child(5)  { left: 28%; }
+.confetti:nth-child(6)  { left: 34%; }
+.confetti:nth-child(7)  { left: 40%; }
+.confetti:nth-child(8)  { left: 46%; }
+.confetti:nth-child(9)  { left: 52%; }
+.confetti:nth-child(10) { left: 58%; }
+.confetti:nth-child(11) { left: 64%; }
+.confetti:nth-child(12) { left: 70%; }
+.confetti:nth-child(13) { left: 76%; }
+.confetti:nth-child(14) { left: 82%; }
+.confetti:nth-child(15) { left: 88%; }
+.confetti:nth-child(16) { left: 5%; }
+.confetti:nth-child(17) { left: 13%; }
+.confetti:nth-child(18) { left: 21%; }
+.confetti:nth-child(19) { left: 30%; }
+.confetti:nth-child(20) { left: 38%; }
+.confetti:nth-child(21) { left: 47%; }
+.confetti:nth-child(22) { left: 55%; }
+.confetti:nth-child(23) { left: 63%; }
+.confetti:nth-child(24) { left: 72%; }
+.confetti:nth-child(25) { left: 80%; }
+.confetti:nth-child(26) { left: 91%; }
+.confetti:nth-child(27) { left: 95%; }
+.confetti:nth-child(28) { left: 8%; }
+.confetti:nth-child(29) { left: 44%; }
+.confetti:nth-child(30) { left: 85%; }
+
+/* Sizes: vary between 8px and 16px */
+.confetti:nth-child(5n+1) { width: 10px; height: 10px; }
+.confetti:nth-child(5n+2) { width: 14px; height: 14px; }
+.confetti:nth-child(5n+3) { width: 8px;  height: 8px; }
+.confetti:nth-child(5n+4) { width: 12px; height: 12px; }
+.confetti:nth-child(5n+5) { width: 16px; height: 16px; }
+
+/* Animation durations & delays — stagger for natural look */
+.confetti:nth-child(6n+1) { animation-duration: 2.8s; animation-delay: -0.3s; }
+.confetti:nth-child(6n+2) { animation-duration: 3.5s; animation-delay: -1.8s; }
+.confetti:nth-child(6n+3) { animation-duration: 4.2s; animation-delay: -3.1s; }
+.confetti:nth-child(6n+4) { animation-duration: 2.5s; animation-delay: -0.9s; }
+.confetti:nth-child(6n+5) { animation-duration: 3.8s; animation-delay: -2.5s; }
+.confetti:nth-child(6n+6) { animation-duration: 3.1s; animation-delay: -4.2s; }
+
+/* ============================================================
+   13. KEYFRAMES
+   ============================================================ */
+
+/* Punch fill: scale from 0 to full with bounce */
+@keyframes punch-fill {
+  0%   { transform: scale(0); opacity: 0; }
+  50%  { transform: scale(1.15); opacity: 1; }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Shake: horizontal oscillation for wrong code */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-6px); }
+  80%      { transform: translateX(4px); }
+}
+
+/* Confetti fall */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(25px) rotate(360deg);
+    opacity: 0.6;
+  }
+}
+
+/* Alternate rotation direction for even confetti */
+.confetti:nth-child(even) {
+  animation-name: confetti-fall-reverse;
+}
+
+@keyframes confetti-fall-reverse {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(-20px) rotate(-360deg);
+    opacity: 0.6;
+  }
+}
+
+/* ============================================================
+   14. INTERACTIVE STATES (touch-action, focus-visible)
+   ============================================================ */
+
+button {
+  touch-action: manipulation;
+}
+
+.code-input {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Remove default outlines in favor of focus-visible */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================================
+   15. REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .slot.punched .slot-fill,
+  .slot.punched.animating .slot-fill {
+    /* Instant appearance, no animation */
+    animation: none;
+    transition: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .code-input.shake {
+    animation: none;
+  }
+
+  .toast {
+    transition: none;
+  }
+
+  .celebration-overlay {
+    transition: none;
+  }
+
+  .confetti {
+    display: none;
+  }
+}
+
+/* ============================================================
+   16. UTILITY CLASSES
+   ============================================================ */
+
+.hidden {
+  display: none !important;
+}
+
+.shake {
+  animation: shake 0.3s ease;
+}
+
+/* Body overflow lock when celebration is showing */
+body.celebration-active {
+  overflow: hidden;
+}
+
+/* ============================================================
+   17. STORAGE ERROR
+   ============================================================ */
+
+.storage-error {
+  width: 100%;
+  max-width: 480px;
+  padding: 40px 20px;
+  text-align: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+}
+
+.storage-error-he {
+  font-size: 1.1rem;
+  color: var(--brand);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.storage-error-en {
+  font-size: 0.9rem;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}

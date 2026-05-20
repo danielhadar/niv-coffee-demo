@@ -1,0 +1,22 @@
+{
+  "name": "ניב קפה מעדניה - כרטיס ניקוב",
+  "short_name": "ניב",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4EBD2",
+  "theme_color": "#3F5C38",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

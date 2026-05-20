@@ -1,0 +1,1012 @@
+/* ============================================================================
+ * Negishut — Israeli accessibility widget (IS 5568 / WCAG 2.0 AA)
+ * Copyright (c) 2026 Daniel Hadar. All rights reserved.
+ * ============================================================================
+ *
+ * This stylesheet contains TWO categories of rules:
+ *
+ *  (1) Widget chrome — everything scoped under #negishut-root.
+ *      All such rules use a strong selector base (`#negishut-root ...`)
+ *      so host-page styles don't bleed into the widget.
+ *
+ *  (2) Host-page modes — classes applied to <html> (e.g. .negishut-monochrome,
+ *      .negishut-cursor-black) that affect the host page itself. These rules
+ *      use !important to override host styles.
+ *
+ *      The widget container (#negishut-root) is exempted from filter-based
+ *      modes (monochrome / sepia / invert) by re-applying the inverse filter,
+ *      so the widget stays usable regardless of mode.
+ * ============================================================================ */
+
+
+/* ---------- (1) WIDGET CHROME ---------- */
+
+#negishut-root {
+  /* Reset / isolation so the widget renders consistently regardless of host */
+  all: initial;
+  font-family: "Open Sans Hebrew", "Assistant", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  direction: rtl;
+  text-align: right;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+
+  /* Theme variables — host can override by setting these on :root */
+  --negishut-accent:        #1976d2;
+  --negishut-accent-dark:   #115293;
+  --negishut-bg:            #ffffff;
+  --negishut-text:          #1a1a1a;
+  --negishut-muted:         #6b6b6b;
+  --negishut-border:        #d5d5d5;
+  --negishut-active-bg:     var(--negishut-accent);
+  --negishut-active-text:   #ffffff;
+  --negishut-hover-bg:      #f0f4fa;
+  --negishut-section-bg:    #f7f7f7;
+  --negishut-shadow:        0 6px 24px rgba(0, 0, 0, 0.18);
+  --negishut-radius:        10px;
+  --negishut-fab-size:      56px;
+  --negishut-panel-width:   340px;
+  --negishut-z:             2147483647;
+
+  position: fixed;
+  inset: auto;
+  z-index: var(--negishut-z);
+  pointer-events: none; /* children re-enable */
+}
+
+/* Reset wrapped in :where() so it has 0,0,0 specificity — otherwise
+   the #negishut-root ID would beat any class+tag widget rule and
+   silently undo font-size / margin / padding / etc on descendants. */
+:where(#negishut-root) *,
+:where(#negishut-root) *::before,
+:where(#negishut-root) *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  direction: inherit;
+}
+
+:where(#negishut-root) [hidden] {
+  display: none !important;
+}
+
+/* LTR variant */
+#negishut-root[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+
+/* ---------- FAB (floating action button) ---------- */
+
+#negishut-fab {
+  position: fixed;
+  width: var(--negishut-fab-size);
+  height: var(--negishut-fab-size);
+  border: none;
+  border-radius: 50%;
+  background: var(--negishut-accent);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--negishut-shadow);
+  pointer-events: auto;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+  z-index: var(--negishut-z);
+}
+
+#negishut-fab:hover,
+#negishut-fab:focus-visible {
+  background: var(--negishut-accent-dark);
+  transform: scale(1.05);
+}
+
+#negishut-fab:focus-visible {
+  outline: 3px solid #ffd400;
+  outline-offset: 2px;
+}
+
+#negishut-fab svg {
+  width: 30px;
+  height: 30px;
+  /* No fill/stroke defaults — the SVG sets its own (Phosphor uses
+     fill:none + stroke:currentColor for outline style). */
+}
+
+/* FAB position variants — respect iOS safe areas (notch, home indicator) */
+#negishut-root[data-position="bottom-right"] #negishut-fab {
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right:  calc(20px + env(safe-area-inset-right,  0px));
+}
+#negishut-root[data-position="bottom-left"] #negishut-fab {
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left:   calc(20px + env(safe-area-inset-left,   0px));
+}
+#negishut-root[data-position="top-right"] #negishut-fab {
+  top:   calc(20px + env(safe-area-inset-top,   0px));
+  right: calc(20px + env(safe-area-inset-right, 0px));
+}
+#negishut-root[data-position="top-left"] #negishut-fab {
+  top:  calc(20px + env(safe-area-inset-top,  0px));
+  left: calc(20px + env(safe-area-inset-left, 0px));
+}
+
+
+/* ---------- Panel ---------- */
+
+#negishut-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--negishut-panel-width);
+  max-width: 100vw;
+  background: var(--negishut-bg);
+  color: var(--negishut-text);
+  box-shadow: var(--negishut-shadow);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: var(--negishut-z);
+  overflow: hidden;
+}
+
+/* Panel slides in from the side that matches the FAB position */
+#negishut-root[data-position$="-right"] #negishut-panel {
+  right: 0;
+  transform: translateX(100%);
+}
+#negishut-root[data-position$="-left"] #negishut-panel {
+  left: 0;
+  transform: translateX(-100%);
+}
+#negishut-root.negishut-open[data-position$="-right"] #negishut-panel,
+#negishut-root.negishut-open[data-position$="-left"]  #negishut-panel {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #negishut-panel,
+  #negishut-fab {
+    transition: none;
+  }
+}
+
+
+/* ---------- Panel header ---------- */
+
+#negishut-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--negishut-accent);
+  color: #fff;
+  border-bottom: 1px solid var(--negishut-accent-dark);
+  flex-shrink: 0;
+}
+
+#negishut-panel-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: inherit;   /* inherit white from #negishut-panel-header */
+}
+
+#negishut-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+}
+#negishut-close:hover,
+#negishut-close:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+#negishut-close:focus-visible {
+  outline: 2px solid #ffd400;
+  outline-offset: 1px;
+}
+
+
+/* ---------- Panel body (scrollable) ---------- */
+
+#negishut-panel-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 14px 8px;
+}
+
+#negishut-panel-body::-webkit-scrollbar {
+  width: 8px;
+}
+#negishut-panel-body::-webkit-scrollbar-thumb {
+  background: var(--negishut-border);
+  border-radius: 4px;
+}
+
+
+/* ---------- Section ---------- */
+
+.negishut-section {
+  margin-bottom: 18px;
+}
+
+.negishut-section + .negishut-section {
+  margin-top: 18px;
+}
+
+.negishut-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--negishut-text);
+  margin: 0 2px 18px;
+  letter-spacing: 0.2px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #c8c8c8;
+  display: flex;
+  align-items: center;
+}
+
+/* Vertical stack inside a section — matches the grid's inter-row gap */
+.negishut-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+/* ---------- Toggle button grid (2-col, with span-2 for orphan items) ---------- */
+
+.negishut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.negishut-toggle.negishut-span-2 {
+  grid-column: 1 / -1;
+}
+
+.negishut-toggle {
+  background: var(--negishut-bg);
+  border: 1.5px solid var(--negishut-border);
+  border-radius: var(--negishut-radius);
+  padding: 14px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: center;
+  min-height: 92px;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, transform 0.08s ease,
+              box-shadow 0.15s ease;
+  position: relative;
+  color: var(--negishut-text);
+}
+
+.negishut-toggle:hover {
+  background: var(--negishut-hover-bg);
+  border-color: var(--negishut-accent);
+}
+
+.negishut-toggle:focus-visible {
+  outline: 3px solid #ffd400;
+  outline-offset: 2px;
+}
+
+.negishut-toggle:active {
+  transform: scale(0.97);
+}
+
+/* Span-2 buttons get a horizontal layout — icon on side, label centered */
+.negishut-toggle.negishut-span-2 {
+  flex-direction: row;
+  justify-content: center;
+  min-height: 56px;
+  padding: 10px 14px;
+  gap: 12px;
+}
+.negishut-toggle.negishut-span-2 .negishut-label {
+  font-size: 14px;
+}
+
+.negishut-toggle .negishut-icon {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.negishut-toggle .negishut-icon svg {
+  width: 100%;
+  height: 100%;
+  /* fill/stroke/stroke-width come from each SVG's own attributes so the
+     CSS doesn't override per-icon styling */
+}
+
+.negishut-toggle .negishut-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+/* ---------- HTML-glyph icons (Aa, A+, A−) ---------- */
+
+.negishut-glyph {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  direction: ltr;
+  unicode-bidi: isolate;
+  letter-spacing: -0.5px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+.negishut-glyph small {
+  font-size: 14px;
+  font-weight: 700;
+}
+.negishut-glyph-black-yellow {
+  background: #000;
+  color: #ffeb3b;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  letter-spacing: -1px;
+}
+
+/* Active state */
+.negishut-toggle[aria-pressed="true"],
+.negishut-toggle.negishut-active {
+  background: var(--negishut-active-bg);
+  border-color: var(--negishut-active-bg);
+  color: var(--negishut-active-text);
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.25);
+}
+.negishut-toggle[aria-pressed="true"]:hover,
+.negishut-toggle.negishut-active:hover {
+  background: var(--negishut-accent-dark);
+  border-color: var(--negishut-accent-dark);
+}
+/* Black-yellow glyph stays its own colors even when toggle is active */
+.negishut-toggle[aria-pressed="true"] .negishut-glyph-black-yellow {
+  background: #000;
+  color: #ffeb3b;
+}
+
+
+/* ---------- Font size row (special: 3 columns: −, level, +) ---------- */
+
+.negishut-font-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.negishut-font-btn {
+  background: var(--negishut-bg);
+  border: 1.5px solid var(--negishut-border);
+  border-radius: var(--negishut-radius);
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 700;
+  padding: 12px 6px;
+  color: var(--negishut-text);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: center;          /* center +A / -A within the cell */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+.negishut-font-btn:hover:not(:disabled) {
+  background: var(--negishut-hover-bg);
+  border-color: var(--negishut-accent);
+}
+.negishut-font-btn:focus-visible {
+  outline: 3px solid #ffd400;
+  outline-offset: 2px;
+}
+.negishut-font-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.negishut-font-level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--negishut-border);
+  border-radius: var(--negishut-radius);
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--negishut-section-bg);
+  color: var(--negishut-muted);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+
+/* ---------- Footer actions ---------- */
+
+#negishut-panel-footer {
+  border-top: 1px solid var(--negishut-border);
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--negishut-section-bg);
+  flex-shrink: 0;
+}
+
+.negishut-action {
+  /* Block layout with explicit text-align so the icon+text row hugs
+     the panel's edge. `text-align: start` was being overridden by the
+     host page's `footer { text-align: center }` rule because the
+     widget's footer element was originally a <footer> tag; now we
+     use <div> for the footer container plus belt-and-braces explicit
+     values here. */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  min-height: 44px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  color: var(--negishut-text);
+  text-decoration: none;
+  text-align: right;              /* RTL default */
+  cursor: pointer;
+  direction: rtl;
+}
+
+#negishut-root[dir="ltr"] .negishut-action {
+  text-align: left;
+  direction: ltr;
+}
+.negishut-action .negishut-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-inline-end: 10px;        /* space between icon and label */
+}
+.negishut-action > span:not(.negishut-icon) {
+  display: inline-block;
+  vertical-align: middle;
+}
+.negishut-action:hover {
+  background: var(--negishut-hover-bg);
+  color: var(--negishut-accent-dark);
+}
+.negishut-action:focus-visible {
+  outline: 2px solid var(--negishut-accent);
+  outline-offset: 1px;
+}
+.negishut-action .negishut-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.negishut-action .negishut-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.negishut-action[data-action="reset"] {
+  color: #b00020;
+}
+.negishut-action[data-action="reset"]:hover {
+  background: #fdecea;
+  color: #b00020;
+}
+
+
+/* ---------- Statement modal ---------- */
+
+#negishut-modal {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--negishut-z) + 1);  /* always above panel */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: auto;
+}
+#negishut-modal[hidden] {
+  display: none !important;
+}
+#negishut-modal.negishut-modal-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+#negishut-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+#negishut-modal-card {
+  position: relative;
+  background: var(--negishut-bg);
+  color: var(--negishut-text);
+  border-radius: 12px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+#negishut-modal.negishut-modal-open #negishut-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+#negishut-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  background: var(--negishut-accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+#negishut-modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: inherit;   /* inherit white from #negishut-modal-header */
+}
+
+#negishut-modal-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+}
+#negishut-modal-close:hover,
+#negishut-modal-close:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+#negishut-modal-close:focus-visible {
+  outline: 2px solid #ffd400;
+  outline-offset: 1px;
+}
+
+.negishut-modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.negishut-modal-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--negishut-text);
+  margin: 22px 0 10px;
+}
+.negishut-modal-body h3:first-child {
+  margin-top: 0;
+}
+
+.negishut-modal-body p {
+  margin: 0 0 10px;
+}
+
+.negishut-modal-body ul {
+  margin: 4px 0 12px;
+  padding-right: 22px;
+}
+.negishut-modal-body ul li {
+  margin: 4px 0;
+}
+
+.negishut-modal-body a {
+  color: var(--negishut-accent);
+  text-decoration: underline;
+}
+
+.negishut-modal-meta {
+  color: var(--negishut-muted);
+  font-size: 13px;
+  margin-bottom: 16px !important;
+}
+
+.negishut-modal-contact {
+  background: var(--negishut-section-bg);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 12px 0 0;
+}
+.negishut-modal-contact p {
+  margin: 4px 0;
+}
+
+@media (max-width: 480px) {
+  #negishut-modal {
+    padding: 0;
+    align-items: stretch;
+  }
+  #negishut-modal-card {
+    max-height: 100vh;
+    max-height: 100dvh;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 0;
+  }
+}
+
+
+/* ---------- Backdrop (mobile only — desktop keeps page visible) ---------- */
+
+#negishut-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  z-index: calc(var(--negishut-z) - 1);
+  pointer-events: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+@media (max-width: 720px) {
+  #negishut-backdrop {
+    display: block;
+  }
+  #negishut-root.negishut-open #negishut-backdrop {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+
+/* ---------- Mobile responsive ----------
+ * On phones and small tablets the panel shrinks to ~85% of viewport
+ * (capped at 380px) so the page is still partially visible behind the
+ * dimmed backdrop — doesn't feel like a full takeover.
+ */
+
+@media (max-width: 720px) {
+  #negishut-root {
+    --negishut-panel-width: min(85vw, 380px);
+  }
+}
+
+/* Grid stays 2-col on all sizes — already the default */
+
+
+/* ============================================================================
+ * (2) HOST-PAGE MODE CLASSES — applied to <html>
+ * ============================================================================ */
+
+
+/* ---------- Font size levels (root font-size scaling) ----------
+ * Works for rem-based sites out of the box.
+ * Many sites use absolute pixel sizes; for those, we add !important
+ * font-size scaling on the most common text elements. */
+
+html.negishut-font-1 { font-size: 110% !important; }
+html.negishut-font-2 { font-size: 120% !important; }
+html.negishut-font-3 { font-size: 135% !important; }
+html.negishut-font-1 body,
+html.negishut-font-2 body,
+html.negishut-font-3 body {
+  font-size: 1rem !important;
+}
+
+
+/* ---------- Readable / dyslexia-friendly font ----------
+ * We don't ship an actual font file (keeps bundle lean and avoids
+ * licensing). We force a stack of widely-available readable fonts.
+ * For sites that bake fonts via JS canvas etc., this won't help —
+ * acceptable tradeoff for v1. */
+
+html.negishut-readable-font,
+html.negishut-readable-font body,
+html.negishut-readable-font *:not(#negishut-root):not(#negishut-root *) {
+  font-family: "Arial", "Helvetica", "Verdana", "Tahoma", sans-serif !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.65 !important;
+}
+
+
+/* ---------- Color modes (mutually exclusive at JS level) ----------
+ *
+ * IMPORTANT: filters are applied to `body > *:not(#negishut-root)`,
+ * NOT to `<html>`. Why: applying a `filter` to an ancestor of a
+ * position-fixed element makes that filter element the new containing
+ * block for the fixed descendant. If we filtered <html> and then tried
+ * to un-filter #negishut-root, the widget's FAB and panel (both fixed)
+ * would suddenly be positioned relative to #negishut-root (a zero-size
+ * point in the layout) instead of the viewport — sending the FAB off
+ * the screen.
+ *
+ * By filtering body's top-level children and explicitly excluding the
+ * widget root, the widget never sits inside a filter containing block,
+ * so its fixed positioning stays anchored to the viewport.
+ */
+
+html.negishut-monochrome body > *:not(#negishut-root) {
+  filter: grayscale(100%);
+}
+
+html.negishut-sepia body > *:not(#negishut-root) {
+  filter: sepia(85%) contrast(0.95) brightness(1.05);
+}
+
+html.negishut-invert body > *:not(#negishut-root) {
+  filter: invert(100%) hue-rotate(180deg);
+}
+/* Re-invert media inside the inverted region so photos stay normal */
+html.negishut-invert body > *:not(#negishut-root) img,
+html.negishut-invert body > *:not(#negishut-root) video,
+html.negishut-invert body > *:not(#negishut-root) picture {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+/* High contrast — black background, white text, yellow accents */
+html.negishut-high-contrast body,
+html.negishut-high-contrast body *:not(#negishut-root):not(#negishut-root *) {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+html.negishut-high-contrast a,
+html.negishut-high-contrast a * {
+  color: #ffeb3b !important;
+  text-decoration: underline !important;
+}
+html.negishut-high-contrast h1,
+html.negishut-high-contrast h2,
+html.negishut-high-contrast h3,
+html.negishut-high-contrast h4,
+html.negishut-high-contrast h5,
+html.negishut-high-contrast h6 {
+  color: #ffeb3b !important;
+}
+html.negishut-high-contrast input,
+html.negishut-high-contrast textarea,
+html.negishut-high-contrast select,
+html.negishut-high-contrast button {
+  background-color: #111 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
+}
+
+/* Black-yellow — black background, yellow everything */
+html.negishut-black-yellow body,
+html.negishut-black-yellow body *:not(#negishut-root):not(#negishut-root *) {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: #ffeb3b !important;
+  border-color: #ffeb3b !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+html.negishut-black-yellow a,
+html.negishut-black-yellow a * {
+  color: #fff !important;
+  text-decoration: underline !important;
+}
+
+
+/* ---------- Stop animations / blinking ---------- */
+
+html.negishut-no-anim *:not(#negishut-root):not(#negishut-root *),
+html.negishut-no-anim *:not(#negishut-root):not(#negishut-root *)::before,
+html.negishut-no-anim *:not(#negishut-root):not(#negishut-root *)::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+
+/* ---------- Large cursors ---------- */
+
+html.negishut-cursor-white,
+html.negishut-cursor-white body,
+html.negishut-cursor-white * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 32 32'><path d='M5 3 L5 26 L11 20 L14 28 L19 26 L15.5 18 L23 18 Z' fill='%23ffffff' stroke='%23000000' stroke-width='2' stroke-linejoin='round'/></svg>") 0 0, auto !important;
+}
+html.negishut-cursor-white a,
+html.negishut-cursor-white button,
+html.negishut-cursor-white [role="button"],
+html.negishut-cursor-white input[type="submit"],
+html.negishut-cursor-white input[type="button"] {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 32 32'><path d='M5 3 L5 26 L11 20 L14 28 L19 26 L15.5 18 L23 18 Z' fill='%23ffffff' stroke='%23000000' stroke-width='2' stroke-linejoin='round'/></svg>") 0 0, pointer !important;
+}
+
+html.negishut-cursor-black,
+html.negishut-cursor-black body,
+html.negishut-cursor-black * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 32 32'><path d='M5 3 L5 26 L11 20 L14 28 L19 26 L15.5 18 L23 18 Z' fill='%23000000' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/></svg>") 0 0, auto !important;
+}
+html.negishut-cursor-black a,
+html.negishut-cursor-black button,
+html.negishut-cursor-black [role="button"],
+html.negishut-cursor-black input[type="submit"],
+html.negishut-cursor-black input[type="button"] {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 32 32'><path d='M5 3 L5 26 L11 20 L14 28 L19 26 L15.5 18 L23 18 Z' fill='%23000000' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/></svg>") 0 0, pointer !important;
+}
+
+/* The widget itself must keep its own pointer cursor */
+html.negishut-cursor-white #negishut-root *,
+html.negishut-cursor-black #negishut-root * {
+  cursor: auto !important;
+}
+html.negishut-cursor-white #negishut-root button,
+html.negishut-cursor-black #negishut-root button,
+html.negishut-cursor-white #negishut-root a,
+html.negishut-cursor-black #negishut-root a {
+  cursor: pointer !important;
+}
+
+
+/* ---------- Keyboard navigation focus ring ---------- */
+
+html.negishut-kbd *:focus,
+html.negishut-kbd *:focus-visible {
+  outline: 3px solid #ffd400 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255, 212, 0, 0.35) !important;
+}
+html.negishut-kbd #negishut-root *:focus,
+html.negishut-kbd #negishut-root *:focus-visible {
+  outline: 3px solid #ffd400 !important;
+  outline-offset: 2px !important;
+}
+
+
+/* ---------- Highlight headings ---------- */
+
+html.negishut-highlight-headings h1:not(#negishut-root *),
+html.negishut-highlight-headings h2:not(#negishut-root *),
+html.negishut-highlight-headings h3:not(#negishut-root *),
+html.negishut-highlight-headings h4:not(#negishut-root *),
+html.negishut-highlight-headings h5:not(#negishut-root *),
+html.negishut-highlight-headings h6:not(#negishut-root *) {
+  outline: 2px dashed #ff8a00 !important;
+  outline-offset: 4px !important;
+  background-color: rgba(255, 138, 0, 0.08) !important;
+}
+
+
+/* ---------- Highlight links ---------- */
+
+html.negishut-highlight-links a:not(#negishut-root *) {
+  outline: 1.5px solid #1976d2 !important;
+  outline-offset: 2px !important;
+  text-decoration: underline !important;
+  background-color: rgba(25, 118, 210, 0.08) !important;
+}
+
+
+/* ---------- Persistent image descriptions ----------
+ * The widget injects a <span class="negishut-alt-caption"> after each <img>
+ * with that image's alt text. CSS shows/hides it based on mode. */
+
+.negishut-alt-caption {
+  display: none;
+  font-size: 0.85em;
+  color: var(--negishut-muted, #6b6b6b);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 4px 8px;
+  margin-top: 4px;
+  border-right: 3px solid #1976d2;
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  direction: rtl;
+  text-align: right;
+}
+html[dir="ltr"] .negishut-alt-caption {
+  border-right: none;
+  border-left: 3px solid #1976d2;
+  border-radius: 4px 0 0 4px;
+  direction: ltr;
+  text-align: left;
+}
+html.negishut-show-alt-persistent .negishut-alt-caption {
+  display: block;
+}
+
+
+/* ---------- Show alt on hover (tooltip) ---------- */
+
+#negishut-alt-tooltip {
+  position: fixed;
+  z-index: var(--negishut-z, 2147483647);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: "Open Sans Hebrew", "Assistant", sans-serif;
+  max-width: 280px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  direction: rtl;
+}
+#negishut-alt-tooltip.negishut-visible {
+  opacity: 1;
+}
+
+
+/* ---------- Visually-hidden helper (for screen-reader-only text) ---------- */
+
+.negishut-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
