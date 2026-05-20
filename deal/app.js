@@ -179,7 +179,7 @@ function renderDoneScreen(redeemedAtIso) {
 
 function renderErrorScreen(error) {
   var messages = {
-    "locked":               "הסשן נחסם לאחר ניסיונות שגויים. סרקו שוב את הברקוד בחנות.",
+    "locked":               "אנא סרקו שוב את הברקוד בחנות",
     "expired":              "ההטבה פגה (תוקף ההטבה הסתיים).",
     "not_activated":        "הסשן עוד לא הופעל. הציגו את המסך למוכר/ת בחנות.",
     "backend_unconfigured": "השירות לא מוגדר. פנו לבית הקפה.",
