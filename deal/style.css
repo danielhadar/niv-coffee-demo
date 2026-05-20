@@ -1,7 +1,16 @@
 /* ============================================================
-   Deal-page-specific styles. Global palette/font/header/toast/
-   celebration come from ../src/style.css. Keep this sheet small.
+   Deal-page-specific styles. Global font/header/toast/celebration
+   come from ../src/style.css. The brand palette here mirrors the
+   names used by qr-code.html (--green/--cream/--coral) — the parent
+   stylesheet only exposes --brand/--bg, so we alias them locally.
+   Keep this sheet small.
    ============================================================ */
+
+:root {
+  --green: #3F5C38;
+  --cream: #F4EBD2;
+  --coral: #EA9580;
+}
 
 .deal-screen {
   display: flex;
