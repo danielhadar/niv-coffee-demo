@@ -43,23 +43,32 @@
   margin-top: 8px;
 }
 
-/* PIN field — same visual weight as the punch-card code input but always 4 chars. */
+/* PIN entry — 4 separate cells, one digit each. Cells flow LTR so a Hebrew
+   speaker types left-to-right matching the numeric keyboard, while the rest
+   of the page stays RTL. */
 .pin-section {
   width: 100%;
   max-width: 320px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  align-items: stretch;
+  gap: 14px;
+  align-items: center;
 }
 
-.pin-input {
+.pin-cells {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pin-cell {
   font-family: var(--font-stack);
-  font-size: 2.4rem;
+  font-size: 2rem;
   font-weight: 700;
   text-align: center;
-  letter-spacing: 0.4em;
-  padding: 14px 16px;
+  width: 56px;
+  height: 64px;
+  padding: 0;
   border: 2px solid var(--green);
   border-radius: var(--radius);
   background: var(--white);
@@ -68,14 +77,33 @@
   caret-color: var(--green);
 }
 
-.pin-input::placeholder {
-  color: var(--green);
-  opacity: 0.35;
-  letter-spacing: 0.4em;
+.pin-cell:focus {
+  border-color: var(--coral);
 }
 
-.pin-input:focus {
-  border-color: var(--coral);
+/* CTA loader — replaces the label with a spinner while a request is in flight. */
+.punch-btn.is-loading {
+  color: transparent;
+  pointer-events: none;
+  position: relative;
+}
+
+.punch-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  top: 50%;
+  left: 50%;
+  margin: -11px 0 0 -11px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: pin-spin 0.7s linear infinite;
+}
+
+@keyframes pin-spin {
+  to { transform: rotate(360deg); }
 }
 
 .hidden { display: none !important; }
@@ -110,6 +138,21 @@
   color: var(--green);
 }
 
+.deal-card-prices {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.deal-card-price-old {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--green);
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
 .deal-card-price {
   font-size: 1.1rem;
   font-weight: 700;
@@ -117,26 +160,20 @@
   white-space: nowrap;
 }
 
-.deal-card-note {
-  display: block;
-  font-size: 0.9rem;
+/* Expiry line under the deals list — quiet, single-line. */
+.deal-expiry {
+  font-size: 0.95rem;
   font-weight: 400;
   color: var(--green);
   opacity: 0.7;
-  margin-top: 4px;
+  margin: 0 0 20px;
+  text-align: center;
 }
 
-/* Done overlay — reuse celebration-overlay base; add a small label below the big "נוצל ✓". */
-.done-deals {
-  font-size: 1.05rem;
-  margin: 0 0 8px;
-  color: var(--white);
-  opacity: 0.9;
-}
-
+/* Done overlay timestamp. */
 .done-timestamp {
   font-size: 0.95rem;
-  margin: 0;
+  margin: 12px 0 0;
   color: var(--white);
-  opacity: 0.6;
+  opacity: 0.7;
 }

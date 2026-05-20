@@ -36,17 +36,13 @@
     <!-- Screen 1: cashier-gate -->
     <section id="screen-activate" class="deal-screen" aria-labelledby="screen-activate-title">
       <h1 id="screen-activate-title" class="deal-title">הראו את המסך למוכר/ת בחנות</h1>
-      <p class="deal-subtitle">המוכר/ת תקליד קוד בן 4 ספרות כדי להפעיל את ההטבה</p>
       <div class="pin-section">
-        <input
-          type="text"
-          id="store-pin-input"
-          class="pin-input"
-          inputmode="numeric"
-          maxlength="4"
-          placeholder="••••"
-          aria-label="קוד הפעלה"
-          autocomplete="off">
+        <div class="pin-cells" id="store-pin-cells" dir="ltr" role="group" aria-label="קוד הפעלה">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 1">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 2">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 3">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 4">
+        </div>
         <button type="button" id="store-pin-btn" class="punch-btn" disabled>הפעלה</button>
         <div id="store-pin-status" class="status-message hidden" role="status" aria-live="polite"></div>
       </div>
@@ -54,19 +50,17 @@
 
     <!-- Screen 2: deals + Niv-redeem -->
     <section id="screen-deals" class="deal-screen hidden" aria-labelledby="screen-deals-title">
-      <h1 id="screen-deals-title" class="deal-title">ההטבה הופעלה ✓</h1>
-      <p class="deal-subtitle">הציגו את המסך לניב והוא יזין קוד</p>
+      <h1 id="screen-deals-title" class="deal-title">ההטבה הופעלה 😊</h1>
+      <p class="deal-subtitle">הציגו את המסך הזה אצל ניב כדי להנות מהמבצעים!</p>
       <ul id="deals-list" class="deals-list"></ul>
+      <p id="deal-expiry" class="deal-expiry"></p>
       <div class="pin-section">
-        <input
-          type="text"
-          id="niv-pin-input"
-          class="pin-input"
-          inputmode="numeric"
-          maxlength="4"
-          placeholder="••••"
-          aria-label="קוד מימוש"
-          autocomplete="off">
+        <div class="pin-cells" id="niv-pin-cells" dir="ltr" role="group" aria-label="קוד מימוש">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 1">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 2">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 3">
+          <input type="text" class="pin-cell" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="ספרה 4">
+        </div>
         <button type="button" id="niv-pin-btn" class="punch-btn" disabled>מימוש</button>
         <div id="niv-pin-status" class="status-message hidden" role="status" aria-live="polite"></div>
       </div>
@@ -81,7 +75,43 @@
 
   </div>
 
-  <!-- Screen 3: done — reuses celebration-overlay so confetti CSS just works -->
+  <!-- Brief activation confetti — shown for ~1.8s after store PIN success, then dismissed before deals screen. -->
+  <div id="screen-activate-success" class="celebration-overlay celebration-overlay--silent" aria-hidden="true">
+    <div class="confetti-container">
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+    </div>
+  </div>
+
+  <!-- Final done screen — reuses celebration-overlay so confetti CSS just works -->
   <div id="screen-done" class="celebration-overlay" role="dialog" aria-modal="true" aria-labelledby="done-title">
     <div class="confetti-container">
       <div class="confetti confetti-diamond"></div>
@@ -116,8 +146,7 @@
       <div class="confetti confetti-square"></div>
     </div>
     <div class="celebration-content">
-      <h2 id="done-title" class="celebration-line1">נוצל ✓</h2>
-      <p id="done-deals" class="done-deals"></p>
+      <h2 id="done-title" class="celebration-line1">ההטבה נוצלה ✓</h2>
       <p id="done-timestamp" class="done-timestamp"></p>
     </div>
   </div>
