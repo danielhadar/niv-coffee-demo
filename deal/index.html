@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3F5C38">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ניב קפה מעדניה">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png?v=15">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon.png?v=15">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../src/style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=15">
+  <script src="app.js?v=15" defer></script>
+  <title>ניב קפה מעדניה - הטבה</title>
+</head>
+<body>
+
+  <!-- localStorage unavailable error (hidden by default; we use sessionStorage as a soft hint but the URL hash is the real session source of truth, so this is mostly informational) -->
+  <div id="storage-error" class="storage-error hidden">
+    <p class="storage-error-he">הדפדפן לא תומך בשמירת נתונים. נסו לפתוח בדפדפן רגיל.</p>
+  </div>
+
+  <div id="app" class="app-container">
+
+    <header class="header">
+      <img src="../assets/logo.png?v=15" alt="ניב קפה מעדניה - Niv" class="header-logo">
+    </header>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden" aria-live="polite"></div>
+
+    <!-- Screen 1: cashier-gate -->
+    <section id="screen-activate" class="deal-screen" aria-labelledby="screen-activate-title">
+      <h1 id="screen-activate-title" class="deal-title">הראו את המסך למוכר/ת בחנות</h1>
+      <p class="deal-subtitle">המוכר/ת תקליד קוד בן 4 ספרות כדי להפעיל את ההטבה</p>
+      <div class="pin-section">
+        <input
+          type="text"
+          id="store-pin-input"
+          class="pin-input"
+          inputmode="numeric"
+          maxlength="4"
+          placeholder="••••"
+          aria-label="קוד הפעלה"
+          autocomplete="off">
+        <button type="button" id="store-pin-btn" class="punch-btn" disabled>הפעלה</button>
+        <div id="store-pin-status" class="status-message hidden" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Screen 2: deals + Niv-redeem -->
+    <section id="screen-deals" class="deal-screen hidden" aria-labelledby="screen-deals-title">
+      <h1 id="screen-deals-title" class="deal-title">ההטבה הופעלה ✓</h1>
+      <p class="deal-subtitle">הציגו את המסך לניב והוא יזין קוד</p>
+      <ul id="deals-list" class="deals-list"></ul>
+      <div class="pin-section">
+        <input
+          type="text"
+          id="niv-pin-input"
+          class="pin-input"
+          inputmode="numeric"
+          maxlength="4"
+          placeholder="••••"
+          aria-label="קוד מימוש"
+          autocomplete="off">
+        <button type="button" id="niv-pin-btn" class="punch-btn" disabled>מימוש</button>
+        <div id="niv-pin-status" class="status-message hidden" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Screen 4: error (locked / expired / unexpected) -->
+    <section id="screen-error" class="deal-screen hidden" aria-labelledby="screen-error-title">
+      <h1 id="screen-error-title" class="deal-title">משהו השתבש</h1>
+      <p id="screen-error-message" class="deal-subtitle"></p>
+      <p class="deal-subtitle deal-subtitle--muted">סרקו שוב את הברקוד בחנות כדי לנסות שוב</p>
+    </section>
+
+  </div>
+
+  <!-- Screen 3: done — reuses celebration-overlay so confetti CSS just works -->
+  <div id="screen-done" class="celebration-overlay" role="dialog" aria-modal="true" aria-labelledby="done-title">
+    <div class="confetti-container">
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+      <div class="confetti confetti-diamond"></div>
+      <div class="confetti confetti-circle"></div>
+      <div class="confetti confetti-hexagon"></div>
+      <div class="confetti confetti-triangle"></div>
+      <div class="confetti confetti-square"></div>
+    </div>
+    <div class="celebration-content">
+      <h2 id="done-title" class="celebration-line1">נוצל ✓</h2>
+      <p id="done-deals" class="done-deals"></p>
+      <p id="done-timestamp" class="done-timestamp"></p>
+    </div>
+  </div>
+
+  <!-- Negishut accessibility widget — IS 5568 / WCAG 2.0 AA -->
+  <script>
+    window.NegishutConfig = {
+      position:         "bottom-right",
+      businessName:     "ניב קפה מעדניה",
+      knownLimitations: "",
+      coordinator: {
+        name:  "דניאל הדר",
+        email: "TODO-niv-accessibility@example.com",
+        phone: ""
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="../vendor/negishut/negishut.css?v=8593dd0b">
+  <script src="../vendor/negishut/negishut.js?v=8593dd0b" defer></script>
+</body>
+</html>
