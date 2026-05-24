@@ -12,6 +12,22 @@
   --coral: #EA9580;
 }
 
+/* Deal page chrome: hero deli photo behind the whole app (header included),
+   with a cream wash so the PIN inputs / deal cards stay readable. */
+.header {
+  background-color: transparent;
+}
+
+.app-container {
+  background-color: transparent;
+  background-image:
+    linear-gradient(rgba(244, 235, 210, 0.82), rgba(244, 235, 210, 0.82)),
+    url("../assets/hero-deli.jpg?v=17");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
 .deal-screen {
   display: flex;
   flex-direction: column;

@@ -8,8 +8,9 @@
 // ============================================================
 
 var DEALS = [
-  { title: "קפה + כריך",       priceOld: "42 ₪",  priceNew: "35 ₪"  },
-  { title: "4+1 על הכריכים",   priceOld: "160 ₪", priceNew: "128 ₪" }
+  { title: "קפה + כריך",       priceOld: "47 ₪",  priceNew: "40 ₪"  },
+  { title: "סלט + שתיה",       priceOld: "46 ₪",  priceNew: "41 ₪"  },
+  { title: "4+1 על הכריכים",   priceOld: "165 ₪", priceNew: "132 ₪" }
 ];
 
 // Must match the BACKEND_URL in src/app.js (single Apps Script deployment
