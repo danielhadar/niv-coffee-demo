@@ -221,7 +221,7 @@ var toastTimer = null;
 var errorTimer = null;
 var isAnimating = false;
 var userCode = null;
-var modalState = null; // null | "my-card" | "restore" | "override-confirm"
+var modalState = null; // null | "my-card" | "restore" | "override-confirm" | "pack-activate"
 var restoreInputValue = "";
 var pendingRestoreCode = null;
 var pendingRestoreState = null;
@@ -1097,6 +1097,36 @@ function renderModal() {
       openModal("restore");
     });
     setTimeout(function () { document.getElementById("modal-confirm-btn").focus(); }, 200);
+  } else if (modalState === "pack-activate") {
+    card.innerHTML =
+      '<h2 id="modal-title" class="modal-title">הפעלת חבילה</h2>' +
+      '<p class="modal-subtitle">הזינו את קוד הצוות כדי להפעיל את החבילה</p>' +
+      '<input type="text" id="pack-activate-input" class="code-input-field" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="קוד">' +
+      '<div id="pack-activate-status" class="modal-status"></div>' +
+      '<button type="button" class="modal-primary-btn" id="pack-activate-submit">הפעלה</button>' +
+      '<button type="button" class="modal-link-btn" id="pack-activate-cancel">ביטול</button>';
+    var pInput  = document.getElementById("pack-activate-input");
+    var pSubmit = document.getElementById("pack-activate-submit");
+    var pStatus = document.getElementById("pack-activate-status");
+
+    function submitActivate() {
+      var entered = pInput.value.trim().toLowerCase();
+      var correct = tabConfig("pack6").code.toLowerCase();
+      if (entered === correct) {
+        activatePack();
+      } else {
+        pStatus.textContent = "קוד לא נכון";
+        pInput.value = "";
+        pInput.focus();
+      }
+    }
+    pInput.addEventListener("input", function () { pStatus.textContent = ""; });
+    pInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && pInput.value.length > 0) { e.preventDefault(); submitActivate(); }
+    });
+    pSubmit.addEventListener("click", submitActivate);
+    document.getElementById("pack-activate-cancel").addEventListener("click", closeModal);
+    setTimeout(function () { pInput.focus(); }, 200);
   }
 }
 
@@ -1189,6 +1219,28 @@ function applyRestoredCode(code) {
 
   closeModal();
   showToast("הכרטיס שוחזר");
+}
+
+// Grant a fresh prepaid pack on the pack tab: active=true, punches=0. Persists
+// + syncs (the backend diff logs deal6_purchase), then re-renders to the
+// active sub-state.
+function activatePack() {
+  var tab = tabConfig("pack6");
+  var fresh = { active: true, punches: 0, shapeIndices: generateShapeIndices(tab.total) };
+  states["pack6"] = fresh;
+  try { localStorage.setItem(tab.storageKey, JSON.stringify(fresh)); } catch (e) {}
+  syncToBackend();
+
+  closeModal();
+
+  // If the pack tab is the one on screen, refresh its card + chrome.
+  if (activeTabKey === "pack6") {
+    renderSVGSlots(fresh.shapeIndices);
+    quantity = 1;
+    render();
+    updatePunchButtonState();
+  }
+  showToast("החבילה הופעלה :)");
 }
 
 function isValidBackendTab(s, tab) {
