@@ -4,10 +4,9 @@
 
 // Per-tab config. Tab order = display order (RTL: rightmost first).
 // To change a code or goal, edit it here. Each tab has its own state and storage.
-// Single offering: כריך + קפה, 5 paid punches + a 6th at half price (total 6).
-// (מבצע שש — the prepaid 6-pack — arrives as a second tab in a later iteration.)
 var TABS = [
-  { key: "bundle", label: "כריך + קפה", emoji: "☕🥪", code: "2552", total: 6, storageKey: "niv_punch_bundle", celebrate: "מגיע לכם כריך + קפה בחצי מחיר ☕🥪" }
+  { key: "bundle", type: "punch", label: "כריך + קפה", emoji: "☕🥪", code: "2552", total: 6, storageKey: "niv_punch_bundle", celebrate: "מגיע לכם כריך + קפה בחצי מחיר ☕🥪" },
+  { key: "pack6",  type: "pack",  label: "מבצע שש!",   emoji: "🎟️", code: "2552", total: 6, storageKey: "niv_pack6", celebrate: "החבילה הסתיימה, תודה! 🎉", priceNew: "225 ₪", priceOld: "247.5 ₪", saving: "חיסכון של 22.5 ₪" }
 ];
 
 // Change to "text" if any code contains letters. "numeric" opens the number pad on mobile.
@@ -199,8 +198,9 @@ var slotGroups = []; // populated by renderSVGSlots
 // STATE
 // ============================================================
 
-// states[tabKey] = { punches, shapeIndices }. punches===tab.total means
-// a celebration is pending. shapeIndices is local presentation only.
+// states[tabKey] = { punches, shapeIndices }; pack tabs also carry `active`
+// (pre-purchase vs eligible). punches===tab.total means a celebration is
+// pending. shapeIndices is local presentation only.
 var states = {};
 var activeTabKey = TABS[0].key;
 var quantity = 1;
@@ -363,15 +363,15 @@ function checkLocalStorageAvailable() {
   }
 }
 
-/**
- * Load state for a given tab from localStorage. Returns defaults
- * if data is missing, unparseable, or fails validation.
- *
- * State shape: { punches, shapeIndices }. punches===tab.total means a
- * celebration is pending; no separate flag is needed.
- */
 function loadStateFor(tab) {
-  var defaults = { punches: 0, shapeIndices: generateShapeIndices(tab.total) };
+  var isPack = tab.type === "pack";
+  function withActive(state) {
+    if (isPack) state.active = state.active === true;
+    else delete state.active;
+    return state;
+  }
+
+  var defaults = withActive({ active: false, punches: 0, shapeIndices: generateShapeIndices(tab.total) });
   var raw;
 
   try {
@@ -379,7 +379,6 @@ function loadStateFor(tab) {
   } catch (e) {
     return defaults;
   }
-
   if (raw === null) return defaults;
 
   var parsed;
@@ -393,22 +392,22 @@ function loadStateFor(tab) {
   if (typeof punches !== "number" || !Number.isInteger(punches) || punches < 0 || punches > tab.total) {
     return defaults;
   }
+  var active = parsed.active === true;
 
-  // shapeIndices is presentation-only; regenerate if missing or invalid.
   var indices = parsed.shapeIndices;
   if (!Array.isArray(indices) || indices.length !== tab.total) {
-    return { punches: punches, shapeIndices: generateShapeIndices(tab.total) };
+    return withActive({ active: active, punches: punches, shapeIndices: generateShapeIndices(tab.total) });
   }
   var seen = {};
   for (var i = 0; i < indices.length; i++) {
     var idx = indices[i];
     if (typeof idx !== "number" || !Number.isInteger(idx) || idx < 0 || idx >= SHAPE_DEFS.length || seen[idx]) {
-      return { punches: punches, shapeIndices: generateShapeIndices(tab.total) };
+      return withActive({ active: active, punches: punches, shapeIndices: generateShapeIndices(tab.total) });
     }
     seen[idx] = true;
   }
 
-  return { punches: punches, shapeIndices: indices.slice() };
+  return withActive({ active: active, punches: punches, shapeIndices: indices.slice() });
 }
 
 /**
@@ -844,11 +843,18 @@ function persistUserCode(c) {
   try { localStorage.setItem(USER_CODE_STORAGE_KEY, c); } catch (e) {}
 }
 
-// Backend only sees punch counts. Shape arrangement is local presentation.
+// Backend sees punch counts; pack tabs also send their active flag. Shape
+// arrangement is local presentation and is not synced.
 function backendStateBlob() {
   var s = {};
   for (var i = 0; i < TABS.length; i++) {
-    s[TABS[i].key] = { punches: states[TABS[i].key].punches };
+    var t = TABS[i];
+    var st = states[t.key];
+    if (t.type === "pack") {
+      s[t.key] = { punches: st.punches, active: st.active === true };
+    } else {
+      s[t.key] = { punches: st.punches };
+    }
   }
   return s;
 }
@@ -1106,8 +1112,15 @@ function applyRestoredCode(code) {
   for (var i = 0; i < TABS.length; i++) {
     var tab = TABS[i];
     var backendTab = state[tab.key];
-    var punches = isValidBackendTab(backendTab, tab) ? backendTab.punches : 0;
-    var fresh = { punches: punches, shapeIndices: generateShapeIndices(tab.total) };
+    var valid = isValidBackendTab(backendTab, tab);
+    var punches = valid ? backendTab.punches : 0;
+    var fresh;
+    if (tab.type === "pack") {
+      var active = valid ? (backendTab.active === true) : false;
+      fresh = { active: active, punches: punches, shapeIndices: generateShapeIndices(tab.total) };
+    } else {
+      fresh = { punches: punches, shapeIndices: generateShapeIndices(tab.total) };
+    }
     states[tab.key] = fresh;
     try { localStorage.setItem(tab.storageKey, JSON.stringify(fresh)); } catch (e) {}
   }
