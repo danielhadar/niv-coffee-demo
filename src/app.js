@@ -308,7 +308,9 @@ function renderSVGSlots(shapeIndices) {
     cardSvgEl.removeChild(existing[j]);
   }
 
-  // Build and insert new slots with inner group wrapper
+  // Build and insert new slots with inner group wrapper. The reward banner is
+  // punch-tab only (the pack card has no half-price slot), so resolve it once.
+  var isPackTab = activeTab().type === "pack";
   for (var i = 0; i < shapeIndices.length; i++) {
     var shapeDef = SHAPE_DEFS[shapeIndices[i]];
     var pos = positions[i];
@@ -326,7 +328,7 @@ function renderSVGSlots(shapeIndices) {
     // The final slot is the half-price reward — hang a coral "חצי מחיר"
     // banner beneath it. Coords are relative to the slot's center (0,0); the
     // shape's half-height is TARGET_SIZE/2 = 17, so the banner starts just below.
-    var isReward = (i === shapeIndices.length - 1);
+    var isReward = (i === shapeIndices.length - 1) && !isPackTab;
     var badge = isReward
       ? '<rect class="slot-banner-bg" x="-27" y="19" width="54" height="15" rx="7.5" ry="7.5" fill="#EA9580"/>' +
         '<text class="slot-banner-text" x="0" y="26.5" text-anchor="middle" dominant-baseline="central" direction="rtl" font-family="Alef, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF">חצי מחיר</text>'
@@ -647,10 +649,16 @@ function dismissCelebration() {
     document.body.classList.remove("celebration-active");
     appEl.removeAttribute("aria-hidden");
 
-    // Reshuffle local shapes for the new card (active tab only). Backend
-    // only sees punches=0; shape arrangement is presentation, not synced.
-    var newIndices = generateShapeIndices(activeTab().total);
-    saveActiveState({ punches: 0, shapeIndices: newIndices });
+    // Reshuffle local shapes for the new card. Backend only sees punches (and
+    // the pack active flag); shape arrangement is presentation, not synced.
+    var tab = activeTab();
+    var newIndices = generateShapeIndices(tab.total);
+    if (tab.type === "pack") {
+      // Pack consumed → back to pre-purchase (must re-activate to buy another).
+      saveActiveState({ active: false, punches: 0, shapeIndices: newIndices });
+    } else {
+      saveActiveState({ punches: 0, shapeIndices: newIndices });
+    }
 
     // Re-render SVG with new shapes
     renderSVGSlots(activeState().shapeIndices);
@@ -659,7 +667,7 @@ function dismissCelebration() {
     render();
     unlockUI();
 
-    showToast("כרטיסיה חדשה :)");
+    showToast(tab.type === "pack" ? "אפשר לרכוש חבילה חדשה :)" : "כרטיסיה חדשה :)");
   }, 300);
 }
 
@@ -689,6 +697,12 @@ function handlePunch() {
 
   var tab = activeTab();
   var s = activeState();
+
+  // A pack can only be punched once activated. The punch UI is hidden in the
+  // pre-purchase state, so this is defense-in-depth against the card ever being
+  // reachable while inactive (which would otherwise activate it via a punch).
+  if (tab.type === "pack" && s.active !== true) return;
+
   var enteredCode = codeInputEl.value.trim().toLowerCase();
   var correctCode = tab.code.toLowerCase();
 
@@ -708,7 +722,9 @@ function handlePunch() {
     lockUI();
 
     if (newPunches === tab.total) {
-      saveActiveState({ punches: tab.total, shapeIndices: s.shapeIndices });
+      var doneState = { punches: tab.total, shapeIndices: s.shapeIndices };
+      if (tab.type === "pack") doneState.active = true;
+      saveActiveState(doneState);
 
       animatePunches(oldPunches, awardedQuantity, function () {
         setTimeout(function () {
@@ -716,7 +732,9 @@ function handlePunch() {
         }, 500);
       });
     } else {
-      saveActiveState({ punches: newPunches, shapeIndices: s.shapeIndices });
+      var midState = { punches: newPunches, shapeIndices: s.shapeIndices };
+      if (tab.type === "pack") midState.active = true;
+      saveActiveState(midState);
 
       animatePunches(oldPunches, awardedQuantity, function () {
         unlockUI();
