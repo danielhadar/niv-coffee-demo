@@ -53,7 +53,7 @@ If a commit only touches files that are not query-versioned (e.g. `README.md`, `
 - Punch card: `curl -sI https://niv-coffee.danielhadar.com/ -o /dev/null -w "%{http_code}\n"` — should be `200`.
 - Deal app: `curl -sI https://niv-coffee.danielhadar.com/deal/ -o /dev/null -w "%{http_code}\n"` — should be `200`.
 - Optionally fetch a known string from the latest change to confirm content swapped (e.g. `curl -s https://niv-coffee.danielhadar.com/src/style.css | grep -m1 "<some new selector>"`, or for deal changes `curl -s https://niv-coffee.danielhadar.com/deal/style.css | grep -m1 "..."`). If you cache-busted in step 4, also fetch the asset with the new version string and confirm it serves: `curl -sI 'https://niv-coffee.danielhadar.com/src/style.css?v=N' -o /dev/null -w "%{http_code}\n"` should be `200`.
-- If it's still serving the old build, wait another 30–60s and re-probe. The build status itself can also be checked with `gh api repos/danielhadar/niv-coffee-demo/pages/builds/latest --jq '.status'` — `built` means the new version is live.
+- If it's still serving the old build, wait another 30–60s and re-probe. The build status itself can also be checked with `gh api repos/danielhadar/niv-coffee/pages/builds/latest --jq '.status'` — `built` means the new version is live.
 
 **9. Report.** Tell the user:
 - Which commits went to origin (SHA range, one-line subjects).
