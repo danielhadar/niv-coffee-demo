@@ -342,7 +342,7 @@ body {
   height: 1px;
   background: rgba(63, 92, 56, 0.18);
   border: none;
-  margin: 4px 0 18px;
+  margin: 18px 0;
 }
 
 .social-hub {
@@ -982,25 +982,21 @@ body.celebration-active {
   margin: 0 0 6px;
 }
 
-.pack-price {
-  font-size: 1rem;
-  color: var(--brand);
-  margin: 0 0 4px;
-}
 .pack-price-new {
+  display: block;
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.9rem;
   color: var(--coral, #EA9580);
+  margin: 2px 0;
 }
-.pack-price-old { opacity: 0.6; margin-right: 6px; }
-.pack-price-old s { text-decoration: line-through; }
-
-.pack-save {
-  font-size: 0.85rem;
-  opacity: 0.6;
+.pack-price-old {
+  display: block;
+  font-size: 0.95rem;
   color: var(--brand);
+  opacity: 0.6;
   margin: 0 0 16px;
 }
+.pack-price-old s { text-decoration: line-through; }
 
 #pack-activate-btn { max-width: 320px; }
 
@@ -1011,16 +1007,16 @@ body.celebration-active {
   margin: 0 0 4px;
 }
 .pack-check {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--brand);
   color: #fff;
-  font-size: 0.8rem;
-  margin-left: 4px;
+  font-size: 1rem;
+  margin: 0 auto 8px;   /* own line, centered above the status text */
 }
 .pack-remaining {
   font-size: 0.95rem;
@@ -1028,19 +1024,23 @@ body.celebration-active {
   color: var(--brand);
   margin: 0 0 12px;
 }
+/* User code — quiet inline line, no box: "קוד משתמש: XXXXXX" + copy icon. */
 .pack-code {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: var(--white);
-  border: 1.5px solid rgba(63, 92, 56, 0.18);
-  border-radius: var(--radius);
-  padding: 8px 14px;
+  gap: 6px;
   margin-bottom: 4px;
 }
-.pack-code-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+.pack-code-label {
+  font-size: 0.9rem;
   color: var(--brand);
+  opacity: 0.85;
+}
+.pack-code-label #pack-code-value {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.pack-code .icon-btn {
+  width: 26px;
+  height: 26px;
 }

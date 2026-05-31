@@ -5,8 +5,8 @@
 // Per-tab config. Tab order = display order (RTL: rightmost first).
 // To change a code or goal, edit it here. Each tab has its own state and storage.
 var TABS = [
-  { key: "bundle", type: "punch", label: "כריך + קפה", emoji: "☕🥪", code: "2552", total: 6, storageKey: "niv_punch_bundle", celebrate: "מגיע לכם כריך + קפה בחצי מחיר ☕🥪" },
-  { key: "pack6",  type: "pack",  label: "מבצע שש!",   emoji: "🎟️", code: "2552", total: 6, storageKey: "niv_pack6", celebrate: "החבילה הסתיימה, תודה! 🎉", priceNew: "225 ₪", priceOld: "247.5 ₪", saving: "חיסכון של 22.5 ₪" }
+  { key: "bundle", type: "punch", label: "כריך + קפה", emoji: "🥪☕", code: "2552", total: 6, storageKey: "niv_punch_bundle", celebrate: "מגיע לכם כריך + קפה בחצי מחיר 🥪☕" },
+  { key: "pack6",  type: "pack",  label: "מבצע שש!",   emoji: "🎟️", code: "2552", total: 6, storageKey: "niv_pack6", celebrate: "החבילה הסתיימה, תודה! 🎉", priceNew: "225 ₪", priceOld: "247.5 ₪" }
 ];
 
 // Change to "text" if any code contains letters. "numeric" opens the number pad on mobile.
@@ -199,7 +199,6 @@ var packRemainingEl = document.getElementById("pack-remaining");
 var packCodeValueEl = document.getElementById("pack-code-value");
 var packPriceNewEl  = document.getElementById("pack-price-new");
 var packPriceOldEl  = document.getElementById("pack-price-old");
-var packSaveEl      = document.getElementById("pack-save");
 var packActivateBtn = document.getElementById("pack-activate-btn");
 var packCopyBtn     = document.getElementById("pack-copy-btn");
 var cardSectionEl     = document.querySelector(".card");
@@ -487,7 +486,6 @@ function renderPackTab() {
   // Pre-purchase price strings (cached refs; only touched on the pack tab).
   packPriceNewEl.textContent = tab.priceNew || "";
   packPriceOldEl.textContent = tab.priceOld || "";
-  packSaveEl.textContent = tab.saving || "";
 
   if (active) {
     packRemainingEl.textContent = "נותרו לך " + (tab.total - s.punches) + " מתוך " + tab.total;
@@ -766,7 +764,7 @@ function buildTabs() {
     var emojiRow = t.emoji ? '<span class="tab-emoji" aria-hidden="true">' + t.emoji + '</span>' : '';
     html += '<button type="button" class="tab' + (isActive ? ' tab--active' : '') +
             '" data-tab="' + t.key + '" role="tab" aria-selected="' + (isActive ? 'true' : 'false') +
-            '"><span class="tab-label">' + t.label + '</span>' + emojiRow + '</button>';
+            '">' + emojiRow + '<span class="tab-label">' + t.label + '</span></button>';
   }
   tabsNavEl.innerHTML = html;
 
