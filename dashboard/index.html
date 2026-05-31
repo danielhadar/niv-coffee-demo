@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ניב קפה: דשבורד</title>
+  <link rel="icon" href="../assets/favicon.png?v=20" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=20">
+  <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: rgb(63, 92, 56);
+      --brand-soft: rgba(63, 92, 56, 0.08);
+      --brand-line: rgba(63, 92, 56, 0.18);
+      --bg: #F4EBD2;
+      --card: #FFFFFF;
+      --muted: #7a8870;
+      --accent: #B5C2A8;
+      --error: #C0392B;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --font: 'Alef', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--brand);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Layout */
+    .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 32px; }
+    header.top {
+      display: flex; align-items: center; gap: 12px;
+      padding: 4px 0 16px;
+    }
+    header.top img { width: 40px; height: 40px; object-fit: contain; }
+    header.top h1 {
+      font-size: 20px; font-weight: 700; margin: 0;
+      letter-spacing: -0.01em;
+    }
+    header.top .sub { font-size: 13px; color: var(--muted); margin-top: 1px; }
+
+    /* Date controls */
+    .controls {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 1px 0 var(--brand-line);
+      margin-bottom: 14px;
+    }
+    .range {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 12px; color: var(--muted); }
+    .field input[type=date] {
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--brand);
+      padding: 10px 12px;
+      border: 1px solid var(--brand-line);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      width: 100%;
+    }
+    .field input[type=date]:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+    .presets {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+    }
+    .preset {
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--brand);
+      background: var(--brand-soft);
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .preset:hover { border-color: var(--brand-line); }
+    .preset.active { background: var(--brand); color: var(--card); }
+
+    /* Refresh */
+    .refresh {
+      width: 100%;
+      margin-top: 12px;
+      font-family: var(--font);
+      font-size: 16px; font-weight: 700;
+      color: var(--card);
+      background: var(--brand);
+      border: 0;
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      transition: transform .08s ease, opacity .2s ease;
+      min-height: 50px;
+    }
+    .refresh:active { transform: scale(0.99); }
+    .refresh[disabled] { opacity: 0.7; cursor: progress; }
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      animation: spin .9s linear infinite;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats */
+    .section-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 18px 4px 8px;
+    }
+    .section-title .note { font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .grid.split { grid-template-columns: 1fr 1fr 1fr; }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 14px;
+      box-shadow: 0 1px 0 var(--brand-line);
+      position: relative;
+    }
+    .card .label {
+      font-size: 13px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .card .value {
+      font-size: 32px; font-weight: 700;
+      margin-top: 6px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .card.big .value { font-size: 42px; }
+    .card .emoji { font-size: 18px; }
+    .card.skeleton .value { color: transparent; background: var(--brand-soft); border-radius: 6px; min-height: 38px; }
+    .card.skeleton.big .value { min-height: 48px; }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 18px;
+      min-height: 1.4em;
+    }
+    .footer.error { color: var(--error); }
+
+    /* Password gate */
+    .gate {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      padding: 24px;
+    }
+    .gate.hidden { display: none; }
+    .gate-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 22px;
+      width: 100%; max-width: 360px;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(63, 92, 56, 0.12);
+    }
+    .gate-card img { width: 72px; height: 72px; object-fit: contain; margin-bottom: 12px; }
+    .gate-card h2 { margin: 0 0 4px; font-size: 20px; }
+    .gate-card .hint { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+    .gate-card input {
+      font-family: var(--font);
+      font-size: 22px;
+      letter-spacing: 0.4em;
+      text-align: center;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--brand-line);
+      border-radius: var(--radius-sm);
+      color: var(--brand);
+      background: var(--bg);
+      direction: ltr;
+    }
+    .gate-card input.error { border-color: var(--error); animation: shake .35s ease; }
+    @keyframes shake {
+      10%,90% { transform: translateX(-2px); }
+      20%,80% { transform: translateX(3px); }
+      30%,50%,70% { transform: translateX(-5px); }
+      40%,60% { transform: translateX(5px); }
+    }
+    .gate-card .err-msg { color: var(--error); font-size: 13px; margin-top: 8px; min-height: 1em; }
+
+    @media (min-width: 520px) {
+      .grid.split { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Password gate -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <img src="../assets/logo.png?v=20" alt="ניב קפה">
+      <h2>ניב קפה: דשבורד</h2>
+      <p class="hint">הקלידו את הקוד כדי להמשיך</p>
+      <input id="gate-input" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="6" aria-label="קוד גישה">
+      <div class="err-msg" id="gate-err"></div>
+    </div>
+  </div>
+
+  <main class="wrap" id="app" aria-hidden="true">
+    <header class="top">
+      <img src="../assets/logo.png?v=20" alt="">
+      <div>
+        <h1>ניב קפה: דשבורד</h1>
+        <div class="sub">נתוני שימוש בכרטיסיה ובהטבות</div>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="range">
+        <div class="field">
+          <label for="from">מתאריך</label>
+          <input type="date" id="from">
+        </div>
+        <div class="field">
+          <label for="to">עד תאריך</label>
+          <input type="date" id="to">
+        </div>
+      </div>
+      <div class="presets" role="group" aria-label="טווחי תאריך מהירים">
+        <button class="preset" data-preset="today">היום</button>
+        <button class="preset" data-preset="week">7 ימים</button>
+        <button class="preset" data-preset="month">30 ימים</button>
+        <button class="preset" data-preset="ytd">מתחילת השנה</button>
+        <button class="preset" data-preset="all">הכל</button>
+      </div>
+      <button class="refresh" id="refresh">
+        <span id="refresh-label">רענן נתונים</span>
+      </button>
+    </section>
+
+    <div class="section-title">סריקות QR</div>
+    <div class="grid">
+      <div class="card big skeleton" id="card-scans">
+        <div class="label"><span class="emoji">📱</span> סריקות</div>
+        <div class="value" id="v-scans">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">ניקובים</div>
+    <div class="grid">
+      <div class="card skeleton" id="card-p-bundle">
+        <div class="label"><span class="emoji">☕🥪</span> כריך + קפה</div>
+        <div class="value" id="v-p-bundle">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">חצי מחיר שהושלם</div>
+    <div class="grid">
+      <div class="card skeleton" id="card-f-bundle">
+        <div class="label"><span class="emoji">☕🥪</span> כריך + קפה</div>
+        <div class="value" id="v-f-bundle">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">הטבה חד-פעמית</div>
+    <div class="grid split">
+      <div class="card skeleton" id="card-d-act">
+        <div class="label"><span class="emoji">✅</span> הופעלו</div>
+        <div class="value" id="v-d-act">—</div>
+      </div>
+      <div class="card skeleton" id="card-d-red">
+        <div class="label"><span class="emoji">🎁</span> מומשו</div>
+        <div class="value" id="v-d-red">—</div>
+      </div>
+      <div class="card skeleton" id="card-d-lock">
+        <div class="label"><span class="emoji">🔒</span> ננעלו</div>
+        <div class="value" id="v-d-lock">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">מבצע שש <span class="note">(חבילה מראש)</span></div>
+    <div class="grid split">
+      <div class="card skeleton" id="card-d6-buy">
+        <div class="label"><span class="emoji">🛒</span> נרכשו</div>
+        <div class="value" id="v-d6-buy">—</div>
+      </div>
+      <div class="card skeleton" id="card-d6-punch">
+        <div class="label"><span class="emoji">🥪</span> ניקובים</div>
+        <div class="value" id="v-d6-punch">—</div>
+      </div>
+      <div class="card skeleton" id="card-d6-done">
+        <div class="label"><span class="emoji">🏁</span> הושלמו</div>
+        <div class="value" id="v-d6-done">—</div>
+      </div>
+    </div>
+
+    <div class="footer" id="footer">&nbsp;</div>
+  </main>
+
+  <script>
+    // ----- config -----
+    var BACKEND_URL = "https://script.google.com/macros/s/AKfycbyM_7knxRp1RHZjJLliqVvNd21HgAfDXSdgIYyibqYJBaZ0iWAfvta8qY556DZizdeI8w/exec";
+    var PASSCODE = "2552";
+    var GATE_KEY = "niv_dashboard_unlocked";
+
+    // ----- gate -----
+    var gateEl = document.getElementById("gate");
+    var gateInput = document.getElementById("gate-input");
+    var gateErr = document.getElementById("gate-err");
+    var appEl = document.getElementById("app");
+
+    function unlock() {
+      try { sessionStorage.setItem(GATE_KEY, "1"); } catch (e) {}
+      gateEl.classList.add("hidden");
+      appEl.setAttribute("aria-hidden", "false");
+      setDefaultRange();
+      load();
+    }
+
+    function tryUnlock(val) {
+      if (val === PASSCODE) {
+        unlock();
+        return true;
+      }
+      gateInput.classList.remove("error");
+      void gateInput.offsetWidth;
+      gateInput.classList.add("error");
+      gateErr.textContent = "קוד שגוי";
+      gateInput.select();
+      return false;
+    }
+
+    gateInput.addEventListener("input", function () {
+      gateErr.textContent = "";
+      if (gateInput.value.length >= PASSCODE.length) {
+        if (!tryUnlock(gateInput.value)) {
+          // keep value for visibility; user retries on next input
+        }
+      }
+    });
+    gateInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") tryUnlock(gateInput.value);
+    });
+
+    try {
+      if (sessionStorage.getItem(GATE_KEY) === "1") unlock();
+      else setTimeout(function () { gateInput.focus(); }, 50);
+    } catch (e) {
+      setTimeout(function () { gateInput.focus(); }, 50);
+    }
+
+    // ----- date helpers -----
+    function ymd(d) {
+      var m = d.getMonth() + 1;
+      var day = d.getDate();
+      return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (day < 10 ? "0" + day : day);
+    }
+    function setRange(from, to) {
+      document.getElementById("from").value = ymd(from);
+      document.getElementById("to").value   = ymd(to);
+    }
+    function setDefaultRange() {
+      var t = new Date();
+      var start = new Date(t.getFullYear(), 0, 1);
+      setRange(start, t);
+      markActivePreset("ytd");
+    }
+    function markActivePreset(key) {
+      var btns = document.querySelectorAll(".preset");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle("active", btns[i].getAttribute("data-preset") === key);
+      }
+    }
+
+    document.querySelectorAll(".preset").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-preset");
+        var t = new Date();
+        var to = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+        var from;
+        if (key === "today")      from = new Date(to);
+        else if (key === "week")  { from = new Date(to); from.setDate(from.getDate() - 6); }
+        else if (key === "month") { from = new Date(to); from.setDate(from.getDate() - 29); }
+        else if (key === "ytd")   from = new Date(t.getFullYear(), 0, 1);
+        else if (key === "all")   from = new Date(2025, 0, 1);
+        setRange(from, to);
+        markActivePreset(key);
+        load();
+      });
+    });
+
+    // Manual date changes clear the active preset
+    ["from", "to"].forEach(function (id) {
+      document.getElementById(id).addEventListener("change", function () {
+        markActivePreset("");
+      });
+    });
+
+    // ----- data -----
+    var refreshBtn = document.getElementById("refresh");
+    var refreshLabel = document.getElementById("refresh-label");
+    var footer = document.getElementById("footer");
+
+    var CARDS = [
+      ["card-scans",    "v-scans",    function (d) { return d.scans; }],
+      ["card-p-bundle", "v-p-bundle", function (d) { return d.punches.bundle; }],
+      ["card-f-bundle", "v-f-bundle", function (d) { return d.freebies.bundle; }],
+      ["card-d-act",    "v-d-act",    function (d) { return d.deal.activations; }],
+      ["card-d-red",    "v-d-red",    function (d) { return d.deal.redemptions; }],
+      ["card-d-lock",   "v-d-lock",   function (d) { return d.deal.locks; }],
+      ["card-d6-buy",   "v-d6-buy",   function (d) { return d.deal6.purchases; }],
+      ["card-d6-punch", "v-d6-punch", function (d) { return d.deal6.punches; }],
+      ["card-d6-done",  "v-d6-done",  function (d) { return d.deal6.completions; }]
+    ];
+
+    function setSkeleton(on) {
+      CARDS.forEach(function (c) {
+        var card = document.getElementById(c[0]);
+        card.classList.toggle("skeleton", on);
+      });
+    }
+
+    function setLoading(on) {
+      refreshBtn.disabled = on;
+      if (on) {
+        refreshLabel.innerHTML = '<span class="spinner" aria-hidden="true"></span> טוען…';
+        footer.classList.remove("error");
+        footer.textContent = "מושך נתונים מהשרת…";
+      } else {
+        refreshLabel.textContent = "רענן נתונים";
+      }
+    }
+
+    function render(data) {
+      CARDS.forEach(function (c) {
+        document.getElementById(c[0]).classList.remove("skeleton");
+        document.getElementById(c[1]).textContent = formatNum(c[2](data));
+      });
+      var now = new Date();
+      footer.classList.remove("error");
+      var timeStr = now.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+      var dateStr = now.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
+      footer.textContent = "עודכן ב-" + timeStr + ", " + dateStr;
+    }
+
+    function formatNum(n) {
+      if (typeof n !== "number" || !isFinite(n)) return "—";
+      return n.toLocaleString("he-IL");
+    }
+
+    function showError(msg) {
+      footer.classList.add("error");
+      footer.textContent = "שגיאה: " + msg;
+      setSkeleton(false);
+      CARDS.forEach(function (c) {
+        document.getElementById(c[1]).textContent = "—";
+      });
+    }
+
+    function load() {
+      var from = document.getElementById("from").value;
+      var to   = document.getElementById("to").value;
+      if (!from || !to) { showError("חסר טווח תאריכים"); return; }
+      if (from > to)    { showError("תאריך התחלה אחרי תאריך הסיום"); return; }
+
+      setLoading(true);
+      setSkeleton(true);
+
+      var url = BACKEND_URL + "?action=report&from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
+      fetch(url, { method: "GET" })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          setLoading(false);
+          if (!data || !data.ok) {
+            showError((data && data.error) || "תשובת שרת לא תקינה");
+            return;
+          }
+          render(data);
+        })
+        .catch(function (err) {
+          setLoading(false);
+          showError(err && err.message ? err.message : "תקלת רשת");
+        });
+    }
+
+    refreshBtn.addEventListener("click", load);
+  </script>
+</body>
+</html>

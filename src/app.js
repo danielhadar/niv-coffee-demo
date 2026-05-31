@@ -4,10 +4,10 @@
 
 // Per-tab config. Tab order = display order (RTL: rightmost first).
 // To change a code or goal, edit it here. Each tab has its own state and storage.
+// Single offering: כריך + קפה, 5 paid punches + a 6th at half price (total 6).
+// (מבצע שש — the prepaid 6-pack — arrives as a second tab in a later iteration.)
 var TABS = [
-  { key: "coffee",   label: "☕ קפה",  code: "2552", total: 10, storageKey: "niv_punch_coffee",   celebrate: "הקפה הזה על חשבוננו :)" },
-  { key: "pizza",    label: "🍕 פיצה", code: "2552", total: 10, storageKey: "niv_punch_pizza",    celebrate: "הפיצה הזאת על חשבוננו :)" },
-  { key: "sandwich", label: "🥪 כריך", code: "2552", total: 10, storageKey: "niv_punch_sandwich", celebrate: "הכריך הזה על חשבוננו :)" }
+  { key: "bundle", label: "כריך + קפה", emoji: "☕🥪", code: "2552", total: 6, storageKey: "niv_punch_bundle", celebrate: "מגיע לכם כריך + קפה בחצי מחיר ☕🥪" }
 ];
 
 // Change to "text" if any code contains letters. "numeric" opens the number pad on mobile.
@@ -15,6 +15,12 @@ var INPUT_MODE = "numeric";
 
 // Minimum selectable punch quantity.
 var MIN_QUANTITY = 1;
+
+// Punch-card slot geometry (SVG user units). SLOT_SIZE is each shape's box;
+// SLOT_GAP (x) is the empty space between two adjacent shapes, and the
+// left/right edge padding is 2x. The viewBox width is derived from these.
+var SLOT_SIZE = 34;
+var SLOT_GAP  = 17;
 
 // Remembers which tab the user was viewing last.
 var ACTIVE_TAB_STORAGE_KEY = "niv_active_tab";
@@ -140,27 +146,29 @@ var SHAPE_DEFS = [
   ]}
 ];
 
-// SVG viewBox is "0 0 300 130". Slot grid is centered inside it.
-// 1 row when total ≤ 5, otherwise 2 rows; bottom row centers if uneven.
-// For total > 10 you'll likely want to grow the viewBox height too.
+// A single short row of slots. Edge padding (left of the first shape / right
+// of the last) is 2·SLOT_GAP; the gap between adjacent shapes is SLOT_GAP.
+// So center-to-center step = SLOT_SIZE + SLOT_GAP and the first center sits at
+// 2·SLOT_GAP + SLOT_SIZE/2. The HTML viewBox width MUST equal slotRowWidth()
+// (= total·SLOT_SIZE + (total+3)·SLOT_GAP); for total=6 that's 357, so the
+// viewBox is "0 0 357 60". The reward slot's "חצי מחיר" banner overhangs ±27
+// from its center but tucks into the 2x right padding. Row sits at y=22 so the
+// banner has room below. (total > 8 would want two rows / a taller viewBox.)
 function computeSlotPositions(total) {
-  var viewW = 300, viewH = 130;
-  var spacingX = 60, spacingY = 70;
-  var rows = total <= 5 ? 1 : 2;
-  var topCount = rows === 1 ? total : Math.ceil(total / 2);
-  var bottomCount = total - topCount;
-  var startY = (viewH - (rows - 1) * spacingY) / 2;
+  var step = SLOT_SIZE + SLOT_GAP;
+  var firstCenter = 2 * SLOT_GAP + SLOT_SIZE / 2;
+  var y = 22;
 
   var positions = [];
-  function addRow(count, row) {
-    var startX = (viewW - (count - 1) * spacingX) / 2;
-    for (var c = 0; c < count; c++) {
-      positions.push({ x: startX + c * spacingX, y: startY + row * spacingY });
-    }
+  for (var c = 0; c < total; c++) {
+    positions.push({ x: firstCenter + c * step, y: y });
   }
-  addRow(topCount, 0);
-  if (bottomCount > 0) addRow(bottomCount, 1);
   return positions;
+}
+
+// Width of the slot row's viewBox = 2x edge + shapes + gaps + 2x edge.
+function slotRowWidth(total) {
+  return total * SLOT_SIZE + (total + 3) * SLOT_GAP;
 }
 
 // ============================================================
@@ -269,8 +277,11 @@ function createSVGElement(part, className, isFill) {
  * Render SVG slot groups into the card SVG based on shapeIndices.
  */
 function renderSVGSlots(shapeIndices) {
-  var TARGET_SIZE = 34;
+  var TARGET_SIZE = SLOT_SIZE;
   var positions = computeSlotPositions(shapeIndices.length);
+
+  // Size the viewBox to the row so edge padding stays exactly 2·SLOT_GAP.
+  cardSvgEl.setAttribute("viewBox", "0 0 " + slotRowWidth(shapeIndices.length) + " 60");
 
   // Remove existing slots
   var existing = cardSvgEl.querySelectorAll(".slot");
@@ -293,9 +304,18 @@ function renderSVGSlots(shapeIndices) {
       html += createSVGElement(shapeDef.parts[p], "slot-fill", true);
     }
 
+    // The final slot is the half-price reward — hang a coral "חצי מחיר"
+    // banner beneath it. Coords are relative to the slot's center (0,0); the
+    // shape's half-height is TARGET_SIZE/2 = 17, so the banner starts just below.
+    var isReward = (i === shapeIndices.length - 1);
+    var badge = isReward
+      ? '<rect class="slot-banner-bg" x="-27" y="19" width="54" height="15" rx="7.5" ry="7.5" fill="#EA9580"/>' +
+        '<text class="slot-banner-text" x="0" y="26.5" text-anchor="middle" dominant-baseline="central" direction="rtl" font-family="Alef, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF">חצי מחיר</text>'
+      : '';
+
     // Create the group with inner wrapper for normalization
     var temp = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    temp.innerHTML = '<g class="slot" data-slot="' + i + '" transform="translate(' + pos.x + ',' + pos.y + ')"><g class="slot-inner">' + html + '</g></g>';
+    temp.innerHTML = '<g class="slot' + (isReward ? ' slot--reward' : '') + '" data-slot="' + i + '" transform="translate(' + pos.x + ',' + pos.y + ')"><g class="slot-inner">' + html + '</g>' + badge + '</g>';
     cardSvgEl.appendChild(temp.firstChild);
   }
 
@@ -671,9 +691,10 @@ function buildTabs() {
   for (var i = 0; i < TABS.length; i++) {
     var t = TABS[i];
     var isActive = t.key === activeTabKey;
+    var emojiRow = t.emoji ? '<span class="tab-emoji" aria-hidden="true">' + t.emoji + '</span>' : '';
     html += '<button type="button" class="tab' + (isActive ? ' tab--active' : '') +
             '" data-tab="' + t.key + '" role="tab" aria-selected="' + (isActive ? 'true' : 'false') +
-            '">' + t.label + '</button>';
+            '"><span class="tab-label">' + t.label + '</span>' + emojiRow + '</button>';
   }
   tabsNavEl.innerHTML = html;
 

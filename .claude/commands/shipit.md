@@ -6,6 +6,7 @@ You are shipping the Niv Cafe site to production. "Prod" means `origin/main` on 
 
 - **Punch card** (the original `/` landing page) at <https://niv-coffee.danielhadar.com>
 - **Store-deal redemption** at <https://niv-coffee.danielhadar.com/deal/>
+- **Owner dashboard** (analytics, gated by the cashier code) at <https://niv-coffee.danielhadar.com/dashboard/> — reads the backend `?action=report` JSON endpoint
 
 Both share the same Apps Script backend (the `BACKEND_URL` in `src/app.js` and `deal/app.js`), the same `assets/`, and the same accessibility widget under `vendor/negishut/`.
 

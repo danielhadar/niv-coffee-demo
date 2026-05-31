@@ -4,21 +4,28 @@
  * Three sheets in the spreadsheet:
  *
  *   "codes" sheet (current punch state per code):
- *     A: code | B: coffee | C: pizza | D: sandwich | E: updated_at
+ *     A: code | B: bundle | C: updated_at
+ *     (was coffee/pizza/sandwich; collapsed to a single "bundle" = כריך+קפה
+ *      offering. Legacy per-tab columns, if present, are left orphaned — the
+ *      header self-heals on the next write.)
  *
  *   "events" sheet (auto-created on first event, append-only):
  *     A: ts | B: type | C: value
- *     type ∈ {punch, freebie, social, scan, deal_activate, deal_redeem, deal_lock}
- *     value: tab key for punch/freebie ("coffee"/"pizza"/"sandwich"),
+ *     type ∈ {punch, freebie, social, scan, deal_activate, deal_redeem, deal_lock,
+ *             deal6_purchase, deal6_punch, deal6_complete}
+ *     value: tab key for punch/freebie ("bundle"),
  *            icon key for social ("facebook"/"instagram"/"maps"/"phone"),
  *            source for scan ("qr"),
  *            first 6 chars of session_id for deal_* events.
+ *     The deal6_* types are reserved for the prepaid 6-pack (מבצע שש) and are
+ *     not emitted yet — the report counts them so the dashboard is ready.
  *
  *   "deal_sessions" sheet (auto-created on first deal interaction):
  *     A: session_id | B: activated_at | C: redeemed_at | D: failed_pin_count | E: locked
  *
  * API:
  *   GET  ?action=get&code=XXXXXX                       -> { ok, state }
+ *   GET  ?action=report&from=YYYY-MM-DD&to=YYYY-MM-DD  -> { ok, range, scans, punches, freebies, deal, deal6 }
  *   GET  ?action=deal_status&session_id=ZZ...          -> { ok, activated, redeemed, expired, locked, expires_at }
  *   POST {action:"set",   code, state}                 -> { ok };   server diffs old→new and logs punch/freebie events.
  *   POST {action:"click", value}                       -> { ok };   logs a social event.
@@ -37,8 +44,8 @@
  * either header if it doesn't exactly match what the script expects.
  */
 
-var TAB_KEYS      = ['coffee', 'pizza', 'sandwich'];
-var TAB_TOTALS    = { coffee: 10, pizza: 10, sandwich: 10 };
+var TAB_KEYS      = ['bundle'];
+var TAB_TOTALS    = { bundle: 6 };
 var SOCIAL_VALUES = ['facebook', 'instagram', 'maps', 'phone'];
 
 var CODES_HEADER  = ['code'].concat(TAB_KEYS).concat(['updated_at']);
@@ -270,6 +277,7 @@ function json_(obj) {
 function doGet(e) {
   try {
     var action = (e && e.parameter) ? e.parameter.action : null;
+    if (action === 'report') return handleReport_(e.parameter || {});
     if (action === 'deal_status') {
       var sessionId = (e && e.parameter) ? e.parameter.session_id : null;
       return handleDealStatus_(sessionId, new Date());
@@ -286,6 +294,62 @@ function doGet(e) {
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   }
+}
+
+// Inclusive [from, to] date window (local script tz). Returns counts off the
+// events sheet — no dependency on the report sheet's stateful B2/B3 inputs.
+// Powers the web dashboard at /dashboard/. The deal6_* buckets are reserved
+// for the prepaid 6-pack (מבצע שש) and stay at 0 until that feature emits them.
+function handleReport_(params) {
+  var fromStr = params.from;
+  var toStr   = params.to;
+  if (!fromStr || !toStr || !/^\d{4}-\d{2}-\d{2}$/.test(fromStr) || !/^\d{4}-\d{2}-\d{2}$/.test(toStr)) {
+    return json_({ ok: false, error: 'bad_request' });
+  }
+  var fromParts = fromStr.split('-').map(Number);
+  var toParts   = toStr.split('-').map(Number);
+  var start   = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
+  var endExcl = new Date(toParts[0], toParts[1] - 1, toParts[2] + 1, 0, 0, 0);
+
+  var counts = {
+    scans:    0,
+    punches:  { bundle: 0 },
+    freebies: { bundle: 0 },
+    deal:     { activations: 0, redemptions: 0, locks: 0 },
+    deal6:    { purchases: 0, punches: 0, completions: 0 }
+  };
+
+  var events = getEventsSheet_();
+  var last = events.getLastRow();
+  if (last >= 2) {
+    var rows = events.getRange(2, 1, last - 1, EVENTS_HEADER.length).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      var ts = rows[i][0];
+      if (!(ts instanceof Date)) continue;
+      if (ts < start || ts >= endExcl) continue;
+      var type = rows[i][1];
+      var value = rows[i][2];
+      if      (type === 'scan'    && value === 'qr')                counts.scans++;
+      else if (type === 'punch'   && counts.punches[value]  !== undefined) counts.punches[value]++;
+      else if (type === 'freebie' && counts.freebies[value] !== undefined) counts.freebies[value]++;
+      else if (type === 'deal_activate')  counts.deal.activations++;
+      else if (type === 'deal_redeem')    counts.deal.redemptions++;
+      else if (type === 'deal_lock')      counts.deal.locks++;
+      else if (type === 'deal6_purchase') counts.deal6.purchases++;
+      else if (type === 'deal6_punch')    counts.deal6.punches++;
+      else if (type === 'deal6_complete') counts.deal6.completions++;
+    }
+  }
+
+  return json_({
+    ok: true,
+    range:    { from: fromStr, to: toStr },
+    scans:    counts.scans,
+    punches:  counts.punches,
+    freebies: counts.freebies,
+    deal:     counts.deal,
+    deal6:    counts.deal6
+  });
 }
 
 function handleSet_(body, now) {
@@ -526,36 +590,35 @@ function setupReport() {
     ['End datetime (excl)', '=B3+(B5+1)/24'],                                        //  9
     ['', ''],                                                                        // 10
     ['PUNCHES', ''],                                                                 // 11
-    ['Coffee',   '=COUNTIFS(events!B:B,"punch",events!C:C,"coffee",  events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 12
-    ['Pizza',    '=COUNTIFS(events!B:B,"punch",events!C:C,"pizza",   events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 13
-    ['Sandwich', '=COUNTIFS(events!B:B,"punch",events!C:C,"sandwich",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 14
-    ['', ''],                                                                        // 15
-    ['FREEBIES (free items earned)', ''],                                            // 16
-    ['Coffee',   '=COUNTIFS(events!B:B,"freebie",events!C:C,"coffee",  events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 17
-    ['Pizza',    '=COUNTIFS(events!B:B,"freebie",events!C:C,"pizza",   events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 18
-    ['Sandwich', '=COUNTIFS(events!B:B,"freebie",events!C:C,"sandwich",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 19
-    ['', ''],                                                                        // 20
-    ['SOCIAL TAPS', ''],                                                             // 21
-    ['Facebook',  '=COUNTIFS(events!B:B,"social",events!C:C,"facebook", events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 22
-    ['Instagram', '=COUNTIFS(events!B:B,"social",events!C:C,"instagram",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 23
-    ['Maps',      '=COUNTIFS(events!B:B,"social",events!C:C,"maps",     events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 24
-    ['Phone',     '=COUNTIFS(events!B:B,"social",events!C:C,"phone",    events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 25
-    ['', ''],                                                                        // 26
-    ['SCANS', ''],                                                                   // 27
-    ['QR', '=COUNTIFS(events!B:B,"scan",events!C:C,"qr",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 28
-    ['', ''],                                                                        // 29
-    ['DEAL', ''],                                                                    // 30
-    ['Activations', '=COUNTIFS(events!B:B,"deal_activate",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 31
-    ['Redemptions', '=COUNTIFS(events!B:B,"deal_redeem",  events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 32
-    ['Locks',       '=COUNTIFS(events!B:B,"deal_lock",    events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 33
-    ['', ''],                                                                        // 34
-    ['DERIVED', ''],                                                                 // 35
-    ['Coffee completion %',   '=IFERROR(B17*10/B12,0)'],                             // 36
-    ['Pizza completion %',    '=IFERROR(B18*10/B13,0)'],                             // 37
-    ['Sandwich completion %', '=IFERROR(B19*10/B14,0)'],                             // 38
-    ['Redemption rate %',     '=IFERROR(B32/B31,0)'],                                // 39
-    ['Total codes ever',      '=COUNTA(codes!A:A)-1'],                               // 40
-    ['Total deal sessions ever', '=COUNTA(deal_sessions!A:A)-1']                     // 41
+    ['כריך + קפה', '=COUNTIFS(events!B:B,"punch",events!C:C,"bundle",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 12
+    ['', ''],                                                                        // 13
+    ['FREEBIES (half-price items earned)', ''],                                      // 14
+    ['כריך + קפה', '=COUNTIFS(events!B:B,"freebie",events!C:C,"bundle",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 15
+    ['', ''],                                                                        // 16
+    ['SOCIAL TAPS', ''],                                                             // 17
+    ['Facebook',  '=COUNTIFS(events!B:B,"social",events!C:C,"facebook", events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 18
+    ['Instagram', '=COUNTIFS(events!B:B,"social",events!C:C,"instagram",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 19
+    ['Maps',      '=COUNTIFS(events!B:B,"social",events!C:C,"maps",     events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 20
+    ['Phone',     '=COUNTIFS(events!B:B,"social",events!C:C,"phone",    events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 21
+    ['', ''],                                                                        // 22
+    ['SCANS', ''],                                                                   // 23
+    ['QR', '=COUNTIFS(events!B:B,"scan",events!C:C,"qr",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 24
+    ['', ''],                                                                        // 25
+    ['DEAL (one-time)', ''],                                                         // 26
+    ['Activations', '=COUNTIFS(events!B:B,"deal_activate",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 27
+    ['Redemptions', '=COUNTIFS(events!B:B,"deal_redeem",  events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 28
+    ['Locks',       '=COUNTIFS(events!B:B,"deal_lock",    events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 29
+    ['', ''],                                                                        // 30
+    ['DEAL-6 (prepaid pack — מבצע שש)', ''],                                          // 31
+    ['Purchases',   '=COUNTIFS(events!B:B,"deal6_purchase",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 32
+    ['Punches',     '=COUNTIFS(events!B:B,"deal6_punch",   events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 33
+    ['Completions', '=COUNTIFS(events!B:B,"deal6_complete",events!A:A,">="&$B$8,events!A:A,"<"&$B$9)'], // 34
+    ['', ''],                                                                        // 35
+    ['DERIVED', ''],                                                                 // 36
+    ['כריך + קפה completion %', '=IFERROR(B15*6/B12,0)'],                             // 37
+    ['Deal redemption rate %',  '=IFERROR(B28/B27,0)'],                              // 38
+    ['Total codes ever',        '=COUNTA(codes!A:A)-1'],                             // 39
+    ['Total deal sessions ever', '=COUNTA(deal_sessions!A:A)-1']                     // 40
   ];
 
   sheet.getRange(1, 1, rows.length, 2).setValues(rows);
@@ -563,10 +626,10 @@ function setupReport() {
   // Number formats
   sheet.getRange('B2:B3').setNumberFormat('yyyy-mm-dd');
   sheet.getRange('B8:B9').setNumberFormat('yyyy-mm-dd hh:mm');
-  sheet.getRange('B36:B39').setNumberFormat('0%');
+  sheet.getRange('B37:B38').setNumberFormat('0%');
 
   // Visual cues: bold section headers, highlight input cells, subdue helpers
-  var headerRows = [1, 7, 11, 16, 21, 27, 30, 35];
+  var headerRows = [1, 7, 11, 14, 17, 23, 26, 31, 36];
   for (var i = 0; i < headerRows.length; i++) {
     sheet.getRange(headerRows[i], 1, 1, 2).setFontWeight('bold');
   }
