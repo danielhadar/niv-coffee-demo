@@ -4,10 +4,9 @@
  * Three sheets in the spreadsheet:
  *
  *   "codes" sheet (current punch state per code):
- *     A: code | B: bundle | C: updated_at
- *     (was coffee/pizza/sandwich; collapsed to a single "bundle" = כריך+קפה
- *      offering. Legacy per-tab columns, if present, are left orphaned — the
- *      header self-heals on the next write.)
+ *     A: code | B: bundle | C: pack6_active | D: pack6_punches | E: updated_at
+ *     (bundle = כריך+קפה punches; pack6_* = the prepaid 6-pack מבצע שש. Legacy
+ *      per-tab columns, if present, are left orphaned — the header self-heals.)
  *
  *   "events" sheet (auto-created on first event, append-only):
  *     A: ts | B: type | C: value
@@ -17,8 +16,8 @@
  *            icon key for social ("facebook"/"instagram"/"maps"/"phone"),
  *            source for scan ("qr"),
  *            first 6 chars of session_id for deal_* events.
- *     The deal6_* types are reserved for the prepaid 6-pack (מבצע שש) and are
- *     not emitted yet — the report counts them so the dashboard is ready.
+ *     The deal6_* types are emitted by logPack6Events_ for the prepaid 6-pack
+ *     (מבצע שש); the report counts them for the dashboard.
  *
  *   "deal_sessions" sheet (auto-created on first deal interaction):
  *     A: session_id | B: activated_at | C: redeemed_at | D: failed_pin_count | E: locked
@@ -48,7 +47,7 @@ var TAB_KEYS      = ['bundle'];
 var TAB_TOTALS    = { bundle: 6 };
 var SOCIAL_VALUES = ['facebook', 'instagram', 'maps', 'phone'];
 
-var CODES_HEADER  = ['code'].concat(TAB_KEYS).concat(['updated_at']);
+var CODES_HEADER  = ['code'].concat(TAB_KEYS).concat(['pack6_active', 'pack6_punches', 'updated_at']);
 var EVENTS_HEADER = ['ts', 'type', 'value'];
 var CODE_REGEX    = /^[2-9A-HJ-NP-Z]{6}$/;
 
@@ -160,6 +159,12 @@ function rowToState_(values) {
     var col = CODES_HEADER.indexOf(TAB_KEYS[i]);
     state[TAB_KEYS[i]] = { punches: toInt_(values[col]) };
   }
+  var aCol = CODES_HEADER.indexOf('pack6_active');
+  var pCol = CODES_HEADER.indexOf('pack6_punches');
+  state.pack6 = {
+    active:  values[aCol] === true || values[aCol] === 'TRUE' || values[aCol] === 'true',
+    punches: toInt_(values[pCol])
+  };
   return state;
 }
 
@@ -173,6 +178,9 @@ function stateToCodeRow_(code, state, now) {
     var punches = (state[key] && typeof state[key].punches === 'number') ? state[key].punches : 0;
     row[CODES_HEADER.indexOf(key)] = toInt_(punches);
   }
+  var pack6 = state.pack6 || {};
+  row[CODES_HEADER.indexOf('pack6_active')]  = pack6.active ? true : false;
+  row[CODES_HEADER.indexOf('pack6_punches')] = toInt_(pack6.punches);
   return row;
 }
 
@@ -222,6 +230,40 @@ function punchesFromState_(state) {
     out[key] = (state[key] && typeof state[key].punches === 'number') ? toInt_(state[key].punches) : 0;
   }
   return out;
+}
+
+function readPack6_(sheet, row) {
+  var values = sheet.getRange(row, 1, 1, CODES_HEADER.length).getValues()[0];
+  var aCol = CODES_HEADER.indexOf('pack6_active');
+  var pCol = CODES_HEADER.indexOf('pack6_punches');
+  return {
+    active:  values[aCol] === true || values[aCol] === 'TRUE' || values[aCol] === 'true',
+    punches: toInt_(values[pCol])
+  };
+}
+
+function pack6FromState_(state) {
+  var p = (state && state.pack6) ? state.pack6 : {};
+  return { active: p.active ? true : false, punches: toInt_(p.punches) };
+}
+
+// Diff old → new pack state and log events. active false→true ⇒ purchase;
+// punch increments ⇒ one deal6_punch each; reaching 6 (was <6) ⇒ complete.
+function logPack6Events_(oldPack, newPack, now) {
+  var rows = [];
+  if (!oldPack.active && newPack.active) {
+    rows.push([now, 'deal6_purchase', '']);
+  }
+  if (newPack.punches > oldPack.punches) {
+    var delta = newPack.punches - oldPack.punches;
+    for (var j = 0; j < delta; j++) rows.push([now, 'deal6_punch', '']);
+  }
+  if (newPack.active && newPack.punches >= 6 && oldPack.punches < 6) {
+    rows.push([now, 'deal6_complete', '']);
+  }
+  if (rows.length === 0) return;
+  var sheet = getEventsSheet_();
+  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, EVENTS_HEADER.length).setValues(rows);
 }
 
 // ---------- event logging ----------
@@ -359,7 +401,9 @@ function handleSet_(body, now) {
   var sheet = getCodesSheet_();
   var row = findCodeRow_(sheet, body.code);
   var oldPunches = (row === -1) ? {} : readCodePunches_(sheet, row);
+  var oldPack    = (row === -1) ? { active: false, punches: 0 } : readPack6_(sheet, row);
   var newPunches = punchesFromState_(body.state);
+  var newPack    = pack6FromState_(body.state);
   var rowData = stateToCodeRow_(body.code, body.state, now);
   if (row === -1) {
     sheet.appendRow(rowData);
@@ -367,6 +411,7 @@ function handleSet_(body, now) {
     sheet.getRange(row, 1, 1, CODES_HEADER.length).setValues([rowData]);
   }
   logPunchAndFreebieEvents_(oldPunches, newPunches, now);
+  logPack6Events_(oldPack, newPack, now);
   return json_({ ok: true });
 }
 
