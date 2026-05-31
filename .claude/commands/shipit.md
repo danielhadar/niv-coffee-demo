@@ -4,8 +4,8 @@ description: Ship Niv Cafe (punch card + deal redemption) to prod — commit pen
 
 You are shipping the Niv Cafe site to production. "Prod" means `origin/main` on GitHub — pushing there triggers a GitHub Pages rebuild. The site hosts **two** apps:
 
-- **Punch card** (the original `/` landing page) at <https://niv-coffee-demo.danielhadar.com>
-- **Store-deal redemption** at <https://niv-coffee-demo.danielhadar.com/deal/>
+- **Punch card** (the original `/` landing page) at <https://niv-coffee-deal.danielhadar.com>
+- **Store-deal redemption** at <https://niv-coffee-deal.danielhadar.com/deal/>
 
 Both share the same Apps Script backend (the `BACKEND_URL` in `src/app.js` and `deal/app.js`), the same `assets/`, and the same accessibility widget under `vendor/negishut/`.
 
@@ -50,9 +50,9 @@ If a commit only touches files that are not query-versioned (e.g. `README.md`, `
 **7. Push.** `git push origin main`. Then `git status` to confirm clean + tracking up to date.
 
 **8. Verify the live site.** After push, give GitHub Pages ~60–90s to rebuild, then probe both apps:
-- Punch card: `curl -sI https://niv-coffee-demo.danielhadar.com/ -o /dev/null -w "%{http_code}\n"` — should be `200`.
-- Deal app: `curl -sI https://niv-coffee-demo.danielhadar.com/deal/ -o /dev/null -w "%{http_code}\n"` — should be `200`.
-- Optionally fetch a known string from the latest change to confirm content swapped (e.g. `curl -s https://niv-coffee-demo.danielhadar.com/src/style.css | grep -m1 "<some new selector>"`, or for deal changes `curl -s https://niv-coffee-demo.danielhadar.com/deal/style.css | grep -m1 "..."`). If you cache-busted in step 4, also fetch the asset with the new version string and confirm it serves: `curl -sI 'https://niv-coffee-demo.danielhadar.com/src/style.css?v=N' -o /dev/null -w "%{http_code}\n"` should be `200`.
+- Punch card: `curl -sI https://niv-coffee-deal.danielhadar.com/ -o /dev/null -w "%{http_code}\n"` — should be `200`.
+- Deal app: `curl -sI https://niv-coffee-deal.danielhadar.com/deal/ -o /dev/null -w "%{http_code}\n"` — should be `200`.
+- Optionally fetch a known string from the latest change to confirm content swapped (e.g. `curl -s https://niv-coffee-deal.danielhadar.com/src/style.css | grep -m1 "<some new selector>"`, or for deal changes `curl -s https://niv-coffee-deal.danielhadar.com/deal/style.css | grep -m1 "..."`). If you cache-busted in step 4, also fetch the asset with the new version string and confirm it serves: `curl -sI 'https://niv-coffee-deal.danielhadar.com/src/style.css?v=N' -o /dev/null -w "%{http_code}\n"` should be `200`.
 - If it's still serving the old build, wait another 30–60s and re-probe. The build status itself can also be checked with `gh api repos/danielhadar/niv-coffee-demo/pages/builds/latest --jq '.status'` — `built` means the new version is live.
 
 **9. Report.** Tell the user:
@@ -72,6 +72,6 @@ If a commit only touches files that are not query-versioned (e.g. `README.md`, `
 
 - This is a static site (vanilla HTML/CSS/JS, no build step). Pushing to `main` is enough to trigger a deploy — there's nothing to compile, install, or test before the push.
 - The repo is **public** — same arrangement as `matkonim`. The punch-card `PUNCH_CODE` in `src/app.js` is necessarily visible to anyone who visits the live site (client-side code), so private-repo'ing it would not actually hide the secret. The **deal app's** `STORE_PIN` / `NIV_PIN` are NOT in the JS bundle — they live only in `backend/Code.gs` (server-side validation), so they don't leak from the client.
-- DNS lives in Cloudflare. `niv-coffee-demo.danielhadar.com` is a CNAME record pointing to `danielhadar.github.io`. Pages reads the domain from the `CNAME` file in the repo root.
-- The two **QR poster** pages (`qr-code.html` for the punch card, `deal-qr.html` for the deal app) encode hardcoded full URLs (`https://niv-coffee-demo.danielhadar.com/` and `.../deal/`). If the domain ever changes, both must be updated alongside `CNAME`.
+- DNS lives in Cloudflare. `niv-coffee-deal.danielhadar.com` is a CNAME record pointing to `danielhadar.github.io`. Pages reads the domain from the `CNAME` file in the repo root.
+- The two **QR poster** pages (`qr-code.html` for the punch card, `deal-qr.html` for the deal app) encode hardcoded full URLs (`https://niv-coffee-deal.danielhadar.com/` and `.../deal/`). If the domain ever changes, both must be updated alongside `CNAME`.
 - Backend changes to `backend/Code.gs` are **not** picked up by `git push` — Apps Script is deployed separately. After committing/pushing a `backend/Code.gs` change, paste the file into the Apps Script editor and run `Deploy → Manage deployments → New version`. The web app URL stays the same.
