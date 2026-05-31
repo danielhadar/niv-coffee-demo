@@ -39,6 +39,29 @@
     <!-- Tabs (populated by app.js — single offering: כריך + קפה) -->
     <nav id="tabs-nav" class="tabs" role="tablist" aria-label="בחירת כרטיסייה"></nav>
 
+    <!-- Pack (מבצע שש) header — shown only on the pack tab, content by sub-state -->
+    <section id="pack-header" class="pack-header hidden">
+      <!-- pre-purchase -->
+      <div id="pack-pre" class="pack-pre hidden">
+        <p class="pack-pitch">חבילת 6 × כריך + קפה</p>
+        <p class="pack-price">
+          <span class="pack-price-new" id="pack-price-new"></span>
+          <span class="pack-price-old">במקום <s id="pack-price-old"></s></span>
+        </p>
+        <p class="pack-save" id="pack-save"></p>
+        <button type="button" id="pack-activate-btn" class="punch-btn">הפעלת חבילה</button>
+      </div>
+      <!-- active -->
+      <div id="pack-active" class="pack-active hidden">
+        <p class="pack-status"><span class="pack-check" aria-hidden="true">✓</span> החבילה פעילה</p>
+        <p class="pack-remaining" id="pack-remaining"></p>
+        <div class="pack-code">
+          <button type="button" class="icon-btn" id="pack-copy-btn" aria-label="העתקת הקוד"></button>
+          <div class="pack-code-value" id="pack-code-value" dir="ltr"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="card">
       <div class="card-grid" dir="ltr">
         <svg class="card-svg" viewBox="0 0 357 60" xmlns="http://www.w3.org/2000/svg" aria-label="כרטיס ניקוב">

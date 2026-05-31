@@ -962,3 +962,85 @@ body.celebration-active {
   color: var(--gray-dark);
   line-height: 1.5;
 }
+
+/* ============================================================
+   PACK (מבצע שש) — prepaid 6-pack header
+   ============================================================ */
+.pack-header {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.pack-pitch {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin: 0 0 6px;
+}
+
+.pack-price {
+  font-size: 1rem;
+  color: var(--brand);
+  margin: 0 0 4px;
+}
+.pack-price-new {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--coral, #EA9580);
+}
+.pack-price-old { opacity: 0.6; margin-right: 6px; }
+.pack-price-old s { text-decoration: line-through; }
+
+.pack-save {
+  font-size: 0.85rem;
+  opacity: 0.6;
+  color: var(--brand);
+  margin: 0 0 16px;
+}
+
+#pack-activate-btn { max-width: 320px; }
+
+.pack-status {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin: 0 0 4px;
+}
+.pack-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.8rem;
+  margin-left: 4px;
+}
+.pack-remaining {
+  font-size: 0.95rem;
+  opacity: 0.75;
+  color: var(--brand);
+  margin: 0 0 12px;
+}
+.pack-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border: 1.5px solid rgba(63, 92, 56, 0.18);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  margin-bottom: 4px;
+}
+.pack-code-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--brand);
+}
