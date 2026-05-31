@@ -192,6 +192,19 @@ var tabsNavEl = document.getElementById("tabs-nav");
 var modalEl = document.getElementById("code-modal");
 var accountBtnEl = document.getElementById("account-btn");
 var cardSvgEl = document.querySelector(".card-svg");
+var packHeaderEl    = document.getElementById("pack-header");
+var packPreEl       = document.getElementById("pack-pre");
+var packActiveEl    = document.getElementById("pack-active");
+var packRemainingEl = document.getElementById("pack-remaining");
+var packCodeValueEl = document.getElementById("pack-code-value");
+var packPriceNewEl  = document.getElementById("pack-price-new");
+var packPriceOldEl  = document.getElementById("pack-price-old");
+var packSaveEl      = document.getElementById("pack-save");
+var packActivateBtn = document.getElementById("pack-activate-btn");
+var packCopyBtn     = document.getElementById("pack-copy-btn");
+var cardSectionEl     = document.querySelector(".card");
+var quantitySectionEl = document.querySelector(".quantity-section");
+var codeSectionEl     = document.querySelector(".code-section");
 var slotGroups = []; // populated by renderSVGSlots
 
 // ============================================================
@@ -279,6 +292,12 @@ function createSVGElement(part, className, isFill) {
 function renderSVGSlots(shapeIndices) {
   var TARGET_SIZE = SLOT_SIZE;
   var positions = computeSlotPositions(shapeIndices.length);
+
+  // getBBox (used below for shape normalization) returns zeros on a
+  // display:none element. The pack tab can leave .card hidden (pre-purchase),
+  // so make sure it's measurable before we normalize. The render() call that
+  // always follows renderSVGSlots re-applies the correct final visibility.
+  if (cardSectionEl) cardSectionEl.classList.remove("hidden");
 
   // Size the viewBox to the row so edge padding stays exactly 2·SLOT_GAP.
   cardSvgEl.setAttribute("viewBox", "0 0 " + slotRowWidth(shapeIndices.length) + " 60");
@@ -439,6 +458,41 @@ function loadActiveTabKey() {
 // RENDERING
 // ============================================================
 
+// Show/hide the punch card + stepper + code entry as a group.
+function setPunchAreaVisible(visible) {
+  cardSectionEl.classList.toggle("hidden", !visible);
+  quantitySectionEl.classList.toggle("hidden", !visible);
+  codeSectionEl.classList.toggle("hidden", !visible);
+}
+
+// Render the pack-tab chrome (header + which sub-state is shown) and toggle the
+// punch area. For a punch tab: hide the pack header, always show the punch area.
+function renderPackTab() {
+  var tab = activeTab();
+  if (tab.type !== "pack") {
+    packHeaderEl.classList.add("hidden");
+    setPunchAreaVisible(true);
+    return;
+  }
+  var s = activeState();
+  var active = s.active === true;
+
+  packHeaderEl.classList.remove("hidden");
+  packPreEl.classList.toggle("hidden", active);
+  packActiveEl.classList.toggle("hidden", !active);
+  setPunchAreaVisible(active);
+
+  // Pre-purchase price strings (cached refs; only touched on the pack tab).
+  packPriceNewEl.textContent = tab.priceNew || "";
+  packPriceOldEl.textContent = tab.priceOld || "";
+  packSaveEl.textContent = tab.saving || "";
+
+  if (active) {
+    packRemainingEl.textContent = "נותרו לך " + (tab.total - s.punches) + " מתוך " + tab.total;
+    packCodeValueEl.textContent = userCode || "";
+  }
+}
+
 /**
  * Render the entire UI from the active tab's state (static, no animation).
  */
@@ -461,6 +515,7 @@ function render() {
   if (quantity > maxQuantity) quantity = maxQuantity;
   if (quantity < MIN_QUANTITY) quantity = MIN_QUANTITY;
   renderStepper(maxQuantity);
+  renderPackTab();
 }
 
 /**
@@ -1177,6 +1232,14 @@ modalEl.addEventListener("click", function (e) {
 });
 
 accountBtnEl.addEventListener("click", function () { openModal("my-card"); });
+
+if (packCopyBtn) {
+  packCopyBtn.innerHTML = iconCopy();
+  packCopyBtn.addEventListener("click", function () { handleCopyCode(this); });
+}
+if (packActivateBtn) {
+  packActivateBtn.addEventListener("click", function () { openModal("pack-activate"); });
+}
 
 // Social-hub analytics. Wire one fire-and-forget click per icon. The link's
 // own href (target=_blank, tel:) still navigates; sendBeacon ensures the
