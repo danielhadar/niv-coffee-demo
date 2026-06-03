@@ -57,8 +57,8 @@ var CODE_REGEX    = /^[2-9A-HJ-NP-Z]{6}$/;
 
 var STORE_PIN              = '1234';
 var NIV_PIN                = '5678';
-var DEAL_EXPIRY            = 'today';   // 'today' | '+24h' | '+7d'
-var DAY_CUTOFF_HOUR        = 23;        // when DEAL_EXPIRY === 'today', sessions expire at the end of this hour
+var DEAL_EXPIRY            = 'tomorrow'; // 'today' | 'tomorrow' | '+24h' | '+7d'
+var DAY_CUTOFF_HOUR        = 23;        // for 'today'/'tomorrow', sessions expire at the end of this hour
 var DEAL_PIN_MAX_ATTEMPTS  = 5;
 
 var DEAL_SESSIONS_HEADER   = ['session_id', 'activated_at', 'redeemed_at', 'failed_pin_count', 'locked'];
@@ -136,12 +136,14 @@ function computeDealExpiry_(activatedAt) {
   if (DEAL_EXPIRY === '+7d') {
     return new Date(activatedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
   }
-  // 'today' — last second of DAY_CUTOFF_HOUR in the spreadsheet TZ.
-  var tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
-  var ymd = Utilities.formatDate(activatedAt, tz, 'yyyy-MM-dd');
-  var hh  = (DAY_CUTOFF_HOUR < 10 ? '0' : '') + DAY_CUTOFF_HOUR;
-  // ISO-like local datetime; Date.parse handles 'yyyy-MM-ddTHH:mm:ss' as local time.
-  return new Date(ymd + 'T' + hh + ':59:59');
+  // 'today' / 'tomorrow' — last second of DAY_CUTOFF_HOUR in the spreadsheet
+  // TZ, on the activation day ('tomorrow' adds one calendar day). Built from
+  // numeric parts so the Date constructor normalizes month/year/leap rollover
+  // (e.g. Feb 28 + 1 → Mar 1, or Feb 29 in a leap year).
+  var tz  = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  var ymd = Utilities.formatDate(activatedAt, tz, 'yyyy-MM-dd').split('-');
+  var dayOffset = (DEAL_EXPIRY === 'tomorrow') ? 1 : 0;
+  return new Date(+ymd[0], +ymd[1] - 1, +ymd[2] + dayOffset, DAY_CUTOFF_HOUR, 59, 59);
 }
 
 function readCodePunches_(sheet, row) {
