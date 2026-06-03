@@ -220,7 +220,7 @@ var toastTimer = null;
 var errorTimer = null;
 var isAnimating = false;
 var userCode = null;
-var modalState = null; // null | "my-card" | "restore" | "override-confirm" | "pack-activate"
+var modalState = null; // null | "welcome" | "my-card" | "restore" | "override-confirm" | "pack-activate"
 var restoreInputValue = "";
 var pendingRestoreCode = null;
 var pendingRestoreState = null;
@@ -1049,7 +1049,23 @@ function onModalKeydown(e) {
 function renderModal() {
   var card = modalEl.querySelector(".modal-card");
 
-  if (modalState === "my-card") {
+  if (modalState === "welcome") {
+    card.innerHTML =
+      '<h2 id="modal-title" class="modal-title">ברוכים הבאים!</h2>' +
+      '<p class="modal-subtitle">' +
+        'הכרטיסיה שלכם נשמרת בטלפון באופן אוטומטי 🌈<br>' +
+        'עם זאת, כדאי להעתיק ולשמור את הקוד האישי שלכם בצד, במידה ותחליפו טלפון או שתרצו לטעון אותה מטלפון אחר:' +
+      '</p>' +
+      '<div class="code-display">' +
+        '<button type="button" class="icon-btn" id="modal-copy-btn" aria-label="העתקה">' + iconCopy() + '</button>' +
+        '<div class="code-display-value">' + userCode + '</div>' +
+      '</div>' +
+      '<button type="button" class="modal-primary-btn" id="modal-close-btn">סגור</button>';
+    document.getElementById("modal-copy-btn").addEventListener("click", function () { handleCopyCode(this); });
+    document.getElementById("modal-close-btn").addEventListener("click", closeModal);
+    setTimeout(function () { document.getElementById("modal-close-btn").focus(); }, 200);
+
+  } else if (modalState === "my-card") {
     card.innerHTML =
       '<h2 id="modal-title" class="modal-title">הכרטיס שלי</h2>' +
       '<p class="modal-subtitle">הקוד האישי שלכם — שמרו אותו לשחזור בכל מכשיר</p>' +
@@ -1296,7 +1312,7 @@ function fallbackCopy(text) {
 
 // Click overlay backdrop to close (only on my-card — others have work in progress).
 modalEl.addEventListener("click", function (e) {
-  if (e.target === modalEl && modalState === "my-card") closeModal();
+  if (e.target === modalEl && (modalState === "my-card" || modalState === "welcome")) closeModal();
 });
 
 accountBtnEl.addEventListener("click", function () { openModal("my-card"); });
@@ -1373,6 +1389,6 @@ if (packActivateBtn) {
     lockUI();
     showCelebration();
   } else if (isFirstLaunch) {
-    openModal("my-card");
+    openModal("welcome");
   }
 })();
