@@ -2,6 +2,9 @@
 
 > טון: ידידותי, חם, אישי. מנוסח בגוף ראשון רבים ("אנחנו").
 > שתי מערכות חיות: כרטיס ניקוב (כריך + קפה) + מסך הטבה חד-פעמי. בנוסף — דשבורד מעקב.
+> מצרפים: 6 קבצי PDF — 2 קודי QR (ניקוב + הטבה) × 3 גרסאות צבע כל אחד.
+>   כרטיס הניקוב: qr-card/niv-punch-qr.pdf · niv-punch-qr-cream-bg.pdf · niv-punch-qr-cream-card.pdf
+>   מסך ההטבה:   deal/qr-card/niv-deal-qr.pdf · niv-deal-qr-cream-bg.pdf · niv-deal-qr-cream-card.pdf
 > לפני שליחה: לעדכן את הקודים בפועל אם השתנו (קופאים 2552 / הטבה: הפעלה 1234, מימוש 5678).
 
 ---
@@ -53,12 +56,17 @@
 ## הודעה 3 — קודי ה-QR להדפסה
 
 ```
-📎 שני קודי QR להדפסה (רצוי על נייר עבה) — נפתחים בדפדפן ופשוט מדפיסים (Cmd/Ctrl + P):
+📎 צירפנו את שני קודי ה-QR להדפסה (צבע, רצוי על נייר עבה) — כל אחד ב-3 גרסאות עיצוב. תבחר את מה שהכי מדבר אליך 💛
 
-1. כרטיס הניקוב:
-   https://niv-coffee.danielhadar.com/qr-code.html
-2. מסך ההטבה:
-   https://niv-coffee.danielhadar.com/deal/deal-qr.html
+*כרטיס הניקוב:*
+1. niv-punch-qr.pdf — רקע לבן (קלאסי ונקי)
+2. niv-punch-qr-cream-bg.pdf — רקע קרם מלא (חם)
+3. niv-punch-qr-cream-card.pdf — דף לבן עם כרטיס קרם במרכז
+
+*מסך ההטבה:*
+4. niv-deal-qr.pdf — רקע לבן
+5. niv-deal-qr-cream-bg.pdf — רקע קרם מלא
+6. niv-deal-qr-cream-card.pdf — דף לבן עם כרטיס קרם במרכז
 
 איפה מומלץ לתלות:
 ☑️ ליד הקופה (חובה)
